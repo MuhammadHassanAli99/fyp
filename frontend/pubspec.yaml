@@ -22,7 +22,7 @@ dependencies:
   # Networking & realtime
   dio: ^5.8.0
   socket_io_client: ^3.1.2
-  connectivity_plus: ^6.1.0
+  connectivity_plus: ^7.3.1
 
   # Persistence
   drift: ^2.26.0
