@@ -6,7 +6,7 @@
 *.swp
 *~
 
-# Env / secrets
+# Env / secrets only (do not ignore normal project files)
 .env
 .env.*
 !.env.example
@@ -25,7 +25,7 @@ backend/storage/
 backend/*.log
 npm-debug.log*
 
-# Frontend / Flutter
+# Frontend / Flutter — generated/local only (Podfile.lock, pbxproj, entitlements stay trackable)
 frontend/.dart_tool/
 frontend/.flutter-plugins
 frontend/.flutter-plugins-dependencies
@@ -37,6 +37,7 @@ frontend/**/Pods/
 frontend/**/Generated.xcconfig
 frontend/**/Flutter/ephemeral/
 frontend/**/flutter/ephemeral/
+frontend/**/flutter_export_environment.sh
 frontend/android/local.properties
 frontend/android/.gradle/
 frontend/android/app/debug/
