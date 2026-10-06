@@ -1,0 +1,67 @@
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.iml
+*.swp
+*~
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.p12
+*.keystore
+google-services.json
+GoogleService-Info.plist
+
+# Backend
+backend/node_modules/
+backend/dist/
+backend/coverage/
+backend/storage/
+backend/*.log
+npm-debug.log*
+
+# Frontend / Flutter
+frontend/.dart_tool/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.packages
+frontend/.pub-cache/
+frontend/.pub/
+frontend/build/
+frontend/**/Pods/
+frontend/**/Generated.xcconfig
+frontend/**/Flutter/ephemeral/
+frontend/**/flutter/ephemeral/
+frontend/android/local.properties
+frontend/android/.gradle/
+frontend/android/app/debug/
+frontend/android/app/profile/
+frontend/android/app/release/
+frontend/linux/flutter/ephemeral/
+frontend/macos/Flutter/ephemeral/
+frontend/windows/flutter/ephemeral/
+frontend/ios/Flutter/Flutter.podspec
+*.apk
+*.aab
+*.ipa
+*.app
+*.dSYM.zip
+*.dSYM
+
+# Coverage / reports
+coverage/
+*.lcov
+test-results/
+junit.xml
+
+# Misc
+*.log
+tmp/
+temp/
+__pycache__/
+*.pyc

@@ -1,0 +1,18 @@
+title = "groupproject gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Example env templates and documented placeholders"
+paths = [
+  '''(.*)?\.env\.example$''',
+  '''(.*)?\.env\..*\.example$''',
+  '''(.*)?package-lock\.json$''',
+  '''(.*)?pubspec\.lock$''',
+]
+regexes = [
+  '''dev-access-secret-change-me-please''',
+  '''dev-refresh-secret-change-me-please''',
+  '''0123456789abcdef0123456789abcdef''',
+]

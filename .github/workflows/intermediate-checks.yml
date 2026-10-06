@@ -1,0 +1,179 @@
+# Tests, database migrations, the API image, and debug builds.
+# Platforms: Android, iOS, macOS, Linux, Windows, and Web.
+name: Intermediate Checks
+
+on:
+  push:
+    branches: [main, master, develop, flutter]
+  pull_request:
+    branches: [main, master, develop, flutter]
+  workflow_dispatch:
+
+concurrency:
+  group: intermediate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  backend-intermediate:
+    name: Backend tests & build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup backend
+        uses: ./.github/actions/setup-backend
+
+      - name: Unit / platform tests
+        run: npm test
+
+      - name: Production TypeScript build
+        run: npm run build
+
+      - name: npm audit (high+)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  frontend-intermediate:
+    name: Frontend tests & codegen
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: ./.github/actions/setup-flutter
+
+      - name: Flutter test
+        run: flutter test --reporter expanded
+
+      - name: Check outdated packages report
+        run: flutter pub outdated || true
+
+  sql-intermediate:
+    name: SQL migrations with MySQL
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: marketplace_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      NODE_ENV: test
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: marketplace_ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup backend
+        uses: ./.github/actions/setup-backend
+
+      - name: Static SQL validation
+        run: |
+          chmod +x scripts/ci/validate-sql.sh
+          ./scripts/ci/validate-sql.sh
+
+      - name: Apply migrations (dry list)
+        working-directory: backend
+        run: npm run db:migrate:dry
+
+      - name: Apply migrations
+        working-directory: backend
+        run: npm run db:migrate
+
+      - name: Verify migration checksums
+        working-directory: backend
+        run: npm run db:migrate:check
+
+  docker-intermediate:
+    name: Backend Docker image build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API image (repo-root context)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: false
+          tags: marketplace-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  flutter-platforms:
+    name: Platform builds (debug)
+    permissions:
+      contents: read
+    uses: ./.github/workflows/flutter-platforms.yml
+    with:
+      mode: debug
+      upload_artifacts: false
+
+  dependency-review:
+    name: Dependency review (PRs)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        continue-on-error: true
+        with:
+          fail-on-severity: high
+
+  intermediate-gate:
+    name: Intermediate gate summary
+    runs-on: ubuntu-latest
+    needs:
+      - backend-intermediate
+      - frontend-intermediate
+      - sql-intermediate
+      - docker-intermediate
+      - flutter-platforms
+      - dependency-review
+    if: always() && !cancelled()
+    steps:
+      - name: Evaluate job results
+        run: |
+          results=(
+            "${{ needs.backend-intermediate.result }}"
+            "${{ needs.frontend-intermediate.result }}"
+            "${{ needs.sql-intermediate.result }}"
+            "${{ needs.docker-intermediate.result }}"
+            "${{ needs.flutter-platforms.result }}"
+            "${{ needs.dependency-review.result }}"
+          )
+          failed=0
+          for r in "${results[@]}"; do
+            echo "result=$r"
+            if [[ "$r" != "success" && "$r" != "skipped" ]]; then
+              failed=1
+            fi
+          done
+          exit $failed

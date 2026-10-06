@@ -1,0 +1,217 @@
+# Coverage, security scanning, and release builds.
+# Platforms: Android, iOS, macOS, Linux, Windows, and Web.
+name: Advanced Checks
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master, develop, flutter]
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: advanced-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+  actions: write
+
+jobs:
+  backend-coverage-security:
+    name: Backend coverage + SCA
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup backend
+        uses: ./.github/actions/setup-backend
+
+      - name: Typecheck (strict)
+        run: npm run typecheck
+
+      - name: Full test suite
+        run: npm test
+
+      - name: Production build artifact
+        run: |
+          npm run build
+          test -f dist/index.js
+
+      - name: npm audit (moderate+)
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-dist
+          path: backend/dist
+          retention-days: 7
+
+  codeql:
+    name: CodeQL (TypeScript/JS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          build-mode: none
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
+
+  container-scan:
+    name: Docker build + Trivy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: false
+          load: true
+          tags: marketplace-api:advanced-ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: marketplace-api:advanced-ci
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
+  flutter-platforms:
+    name: Platform builds (release)
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/flutter-platforms.yml
+    with:
+      mode: release
+      upload_artifacts: true
+
+  frontend-advanced-quality:
+    name: Flutter advanced quality gates
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: ./.github/actions/setup-flutter
+
+      - name: Analyze (fatal warnings)
+        run: flutter analyze --no-fatal-infos --fatal-warnings
+
+      - name: Format gate
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Tests with coverage
+        run: flutter test --coverage
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-coverage
+          path: frontend/coverage/lcov.info
+          retention-days: 14
+        if: always()
+
+  sql-advanced:
+    name: SQL migrate + checksum reconcile path
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: marketplace_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      NODE_ENV: test
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: marketplace_ci
+      JWT_ACCESS_SECRET: ci-access-secret-change-me-please
+      JWT_REFRESH_SECRET: ci-refresh-secret-change-me-please
+      ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup backend
+        uses: ./.github/actions/setup-backend
+
+      - name: Validate SQL
+        run: |
+          chmod +x scripts/ci/validate-sql.sh
+          ./scripts/ci/validate-sql.sh
+
+      - name: Migrate fresh database
+        working-directory: backend
+        run: npm run db:migrate
+
+      - name: Migration check (checksums)
+        working-directory: backend
+        run: npm run db:migrate:check
+
+  ci-matrix-summary:
+    name: Advanced gate summary
+    runs-on: ubuntu-latest
+    needs:
+      - backend-coverage-security
+      - codeql
+      - container-scan
+      - flutter-platforms
+      - frontend-advanced-quality
+      - sql-advanced
+    if: always() && !cancelled()
+    steps:
+      - name: Evaluate job results
+        run: |
+          results=(
+            "${{ needs.backend-coverage-security.result }}"
+            "${{ needs.codeql.result }}"
+            "${{ needs.container-scan.result }}"
+            "${{ needs.flutter-platforms.result }}"
+            "${{ needs.frontend-advanced-quality.result }}"
+            "${{ needs.sql-advanced.result }}"
+          )
+          failed=0
+          for r in "${results[@]}"; do
+            echo "result=$r"
+            if [[ "$r" != "success" && "$r" != "skipped" ]]; then
+              failed=1
+            fi
+          done
+          exit $failed

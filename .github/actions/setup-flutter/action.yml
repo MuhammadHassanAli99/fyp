@@ -1,0 +1,25 @@
+name: Setup Flutter
+description: Install Flutter SDK and resolve frontend packages
+inputs:
+  channel:
+    description: Flutter channel
+    required: false
+    default: stable
+  cache:
+    description: Enable Flutter pub cache
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: ${{ inputs.channel }}
+        cache: ${{ inputs.cache == 'true' }}
+
+    - name: Flutter pub get
+      shell: bash
+      working-directory: frontend
+      run: flutter pub get

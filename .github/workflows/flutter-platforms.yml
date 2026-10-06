@@ -1,0 +1,170 @@
+# Compiles the Flutter app for every native target and web.
+# Intermediate Checks calls this with mode=debug.
+# Advanced Checks calls this with mode=release.
+name: Flutter platform builds
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        description: debug or release
+        required: true
+        type: string
+      upload_artifacts:
+        description: Upload Android and web build outputs
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    name: ${{ matrix.platform }} (${{ inputs.mode }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ matrix.timeout }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: Android
+            os: ubuntu-latest
+            prep: android
+            enable_flag: --enable-android
+            debug_command: flutter build apk --debug
+            release_command: flutter build apk --release
+            upload: true
+            artifact_name: android-apk
+            artifact_path: frontend/build/app/outputs/flutter-apk/*.apk
+            timeout: 45
+
+          - platform: iOS
+            os: macos-latest
+            prep: apple
+            pod_dir: ios
+            enable_flag: --enable-ios
+            debug_command: flutter build ios --debug --no-codesign
+            release_command: flutter build ios --release --no-codesign
+            upload: false
+            artifact_name: ""
+            artifact_path: ""
+            timeout: 60
+
+          - platform: macOS
+            os: macos-latest
+            prep: apple
+            pod_dir: macos
+            enable_flag: --enable-macos-desktop
+            debug_command: flutter build macos --debug
+            release_command: flutter build macos --release
+            upload: false
+            artifact_name: ""
+            artifact_path: ""
+            timeout: 60
+
+          - platform: Linux
+            os: ubuntu-latest
+            prep: linux
+            enable_flag: --enable-linux-desktop
+            debug_command: flutter build linux --debug
+            release_command: flutter build linux --release
+            upload: false
+            artifact_name: ""
+            artifact_path: ""
+            timeout: 45
+
+          - platform: Windows
+            os: windows-latest
+            prep: windows
+            enable_flag: --enable-windows-desktop
+            debug_command: flutter build windows --debug
+            release_command: flutter build windows --release
+            upload: false
+            artifact_name: ""
+            artifact_path: ""
+            timeout: 60
+
+          - platform: Web
+            os: ubuntu-latest
+            prep: web
+            enable_flag: --enable-web
+            debug_command: flutter build web --profile
+            release_command: flutter build web --release
+            upload: true
+            artifact_name: web-build
+            artifact_path: frontend/build/web
+            timeout: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux desktop libraries
+        if: matrix.prep == 'linux'
+        run: |
+          sudo apt-get update -y
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - name: Setup Java
+        if: matrix.prep == 'android'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: ./.github/actions/setup-flutter
+
+      - name: Enable target platform
+        working-directory: frontend
+        run: flutter config ${{ matrix.enable_flag }}
+
+      - name: Install CocoaPods dependencies
+        if: matrix.prep == 'apple'
+        working-directory: frontend
+        env:
+          POD_DIR: ${{ matrix.pod_dir }}
+        run: |
+          flutter pub get
+          cd "${POD_DIR}"
+          pod repo update || true
+          pod install
+
+      - name: Build
+        working-directory: frontend
+        env:
+          BUILD_MODE: ${{ inputs.mode }}
+          DEBUG_COMMAND: ${{ matrix.debug_command }}
+          RELEASE_COMMAND: ${{ matrix.release_command }}
+        run: |
+          case "${BUILD_MODE}" in
+            debug) cmd="${DEBUG_COMMAND}" ;;
+            release) cmd="${RELEASE_COMMAND}" ;;
+            *)
+              echo "::error::mode must be debug or release (got ${BUILD_MODE})"
+              exit 1
+              ;;
+          esac
+          if [[ -z "${cmd}" ]]; then
+            echo "::error::empty build command for ${BUILD_MODE}"
+            exit 1
+          fi
+          echo "Running: ${cmd}"
+          # Matrix-owned command string. Word splitting is the argument split.
+          # shellcheck disable=SC2086
+          ${cmd}
+
+      - name: Flutter doctor
+        if: failure()
+        working-directory: frontend
+        run: flutter doctor -v
+
+      - name: Upload build
+        if: inputs.upload_artifacts && matrix.upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}-${{ inputs.mode }}
+          path: ${{ matrix.artifact_path }}
+          retention-days: 7
+          if-no-files-found: error

@@ -1,0 +1,22 @@
+name: Setup backend
+description: Install Node.js and backend npm dependencies
+inputs:
+  node-version:
+    description: Node.js version
+    required: false
+    default: "20"
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: npm
+        cache-dependency-path: backend/package-lock.json
+
+    - name: Install backend dependencies
+      shell: bash
+      working-directory: backend
+      run: npm ci --no-audit --no-fund
