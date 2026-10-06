@@ -31,7 +31,8 @@ backend/storage/
 backend/*.log
 npm-debug.log*
 
-# Frontend / Flutter (machine-local / generated — do not track)
+# Frontend / Flutter (generated / machine-local only).
+# Podfile.lock, pbxproj, entitlements, and app source stay trackable.
 frontend/.dart_tool/
 frontend/.flutter-plugins
 frontend/.flutter-plugins-dependencies
@@ -40,7 +41,6 @@ frontend/.pub-cache/
 frontend/.pub/
 frontend/build/
 frontend/**/Pods/
-frontend/**/Podfile.lock
 frontend/**/Generated.xcconfig
 frontend/**/Flutter-Generated.xcconfig
 frontend/**/Flutter/ephemeral/

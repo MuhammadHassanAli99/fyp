@@ -84,6 +84,7 @@ for rel in \
   scripts/ci/validate-platforms.sh \
   scripts/ci/validate-sql.sh \
   scripts/ci/validate-repo.sh \
+  scripts/ci/block-secrets.sh \
   scripts/ci/run-local-checks.sh \
   backend/Dockerfile \
   backend/package.json \

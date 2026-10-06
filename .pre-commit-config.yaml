@@ -1,57 +1,12 @@
-# Local git checks (basic tier). Install: pip install pre-commit && pre-commit install
+# Local git check: only block gitignored paths and env files.
+# Everything else (source, Podfile.lock, pbxproj, etc.) can be committed.
+# Heavy checks run in CI (.github/workflows/basic-checks.yml).
+# Install: pip install pre-commit && pre-commit install
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
-    hooks:
-      - id: check-merge-conflict
-      - id: check-yaml
-      - id: check-json
-      - id: check-added-large-files
-        args: ["--maxkb=5120"]
-      - id: detect-private-key
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-        exclude: '\.lock$'
-
   - repo: local
     hooks:
-      - id: validate-repo
-        name: Repo hygiene
-        entry: bash scripts/ci/validate-repo.sh
+      - id: block-ignored-and-env
+        name: Block gitignored and env files
+        entry: bash scripts/ci/block-secrets.sh
         language: system
         pass_filenames: false
-
-      - id: validate-sql
-        name: SQL validation
-        entry: bash scripts/ci/validate-sql.sh
-        language: system
-        pass_filenames: false
-        files: '^database/.*\.sql$'
-
-      - id: validate-platforms
-        name: Platform scaffolds
-        entry: bash scripts/ci/validate-platforms.sh
-        language: system
-        pass_filenames: false
-        files: '^frontend/'
-
-      - id: validate-languages
-        name: Language static checks
-        entry: bash scripts/ci/validate-languages.sh
-        language: system
-        pass_filenames: false
-        files: '\.(ts|dart|kt|kts|java|swift|m|mm|h|cc|cpp|hpp|xml|yml|yaml|json|arb|sh|plist|html|properties|rc)$|(^|/)(Dockerfile|Podfile|CMakeLists\.txt|gradlew)$'
-
-      - id: backend-typecheck
-        name: Backend typecheck
-        entry: bash -c 'cd backend && npm run typecheck'
-        language: system
-        pass_filenames: false
-        files: '^backend/.*\.(ts|json)$'
-
-      - id: flutter-analyze
-        name: Flutter analyze
-        entry: bash -c 'cd frontend && flutter analyze --no-fatal-infos --fatal-warnings'
-        language: system
-        pass_filenames: false
-        files: '^frontend/.*\.(dart|yaml)$'
