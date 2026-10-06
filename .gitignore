@@ -6,16 +6,22 @@
 *.swp
 *~
 
-# Env / secrets
+# Env / secrets (never commit real secrets)
 .env
 .env.*
 !.env.example
 !.env.*.example
 *.pem
 *.p12
+*.p8
+*.mobileprovision
 *.keystore
+*.jks
 google-services.json
 GoogleService-Info.plist
+**/secrets.json
+**/credentials.json
+**/service-account*.json
 
 # Backend
 backend/node_modules/
@@ -25,7 +31,7 @@ backend/storage/
 backend/*.log
 npm-debug.log*
 
-# Frontend / Flutter
+# Frontend / Flutter (machine-local / generated — do not track)
 frontend/.dart_tool/
 frontend/.flutter-plugins
 frontend/.flutter-plugins-dependencies
@@ -34,9 +40,13 @@ frontend/.pub-cache/
 frontend/.pub/
 frontend/build/
 frontend/**/Pods/
+frontend/**/Podfile.lock
 frontend/**/Generated.xcconfig
+frontend/**/Flutter-Generated.xcconfig
 frontend/**/Flutter/ephemeral/
 frontend/**/flutter/ephemeral/
+frontend/**/flutter_export_environment.sh
+frontend/**/flutter_native_integration.env
 frontend/android/local.properties
 frontend/android/.gradle/
 frontend/android/app/debug/
@@ -46,6 +56,7 @@ frontend/linux/flutter/ephemeral/
 frontend/macos/Flutter/ephemeral/
 frontend/windows/flutter/ephemeral/
 frontend/ios/Flutter/Flutter.podspec
+frontend/ios/Flutter/ephemeral/
 *.apk
 *.aab
 *.ipa
