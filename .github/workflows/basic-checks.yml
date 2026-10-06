@@ -23,7 +23,7 @@ jobs:
     name: Repo hygiene & secrets
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -45,7 +45,7 @@ jobs:
     name: All languages and platform scaffolds
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install ShellCheck
         run: sudo apt-get update -y && sudo apt-get install -y shellcheck
@@ -71,7 +71,7 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup backend
         uses: ./.github/actions/setup-backend
@@ -101,7 +101,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Flutter
         uses: ./.github/actions/setup-flutter
