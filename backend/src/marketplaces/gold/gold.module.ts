@@ -497,6 +497,8 @@ class GoldMarketplaceModule implements MarketplaceModule {
       connection,
     ).catch(() => undefined);
     await refreshListingMarketDelta(listingId).catch(() => undefined);
+    const { syncGoldStorefrontForListing } = await import('./gold.stores');
+    await syncGoldStorefrontForListing(listingId).catch(() => undefined);
   }
 }
 

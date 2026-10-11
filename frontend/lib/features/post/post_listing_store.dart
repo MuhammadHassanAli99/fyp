@@ -88,7 +88,9 @@ class PostListingStore {
   /// Uploaded media ready for create payload: {url, kind, isPrimary}.
   final mediaItems = signal<List<Map<String, dynamic>>>([]);
   final sellerBusinessId = signal<int?>(null);
-  final businesses = signal<List<({int id, String name})>>([]);
+  /// Gold shops eligible to post brand ads (application submitted / building / live).
+  final businesses = signal<List<({int id, String name, String kind, String? status})>>([]);
+  final myGoldStores = signal<List<({int id, String name, String status, int proper, int minRequired, bool brandReady})>>([]);
 
   // Gold
   final karat = signal('22');
@@ -226,8 +228,42 @@ class PostListingStore {
       success: (list) {
         businesses.value = [
           for (final item in list)
-            if (item.status == 'active' || item.role == 'owner' || item.role == 'admin' || item.role == 'manager')
-              (id: item.id, name: item.name),
+            if (item.kind == 'gold_shop' &&
+                (item.status == 'active' ||
+                    item.status == 'pending' ||
+                    item.role == 'owner' ||
+                    item.role == 'admin' ||
+                    item.role == 'manager'))
+              (
+                id: item.id,
+                name: item.name,
+                kind: item.kind,
+                status: item.status,
+              ),
+        ];
+        if (sellerBusinessId.value != null &&
+            !businesses.value.any((b) => b.id == sellerBusinessId.value)) {
+          sellerBusinessId.value = null;
+        }
+      },
+      failure: (_, _) {},
+    );
+
+    final goldRepo = gold;
+    if (goldRepo == null) return;
+    final stores = await goldRepo.myStores();
+    stores.when(
+      success: (list) {
+        myGoldStores.value = [
+          for (final store in list)
+            (
+              id: store.id,
+              name: store.name,
+              status: store.storefrontStatus,
+              proper: store.properListingCount,
+              minRequired: store.minListingsRequired,
+              brandReady: store.isBrandReady,
+            ),
         ];
       },
       failure: (_, _) {},

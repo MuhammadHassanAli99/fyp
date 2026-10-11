@@ -36,6 +36,9 @@ abstract final class AppRoutes {
   static const businesses = '/profile/businesses';
   static const businessCreate = '/profile/businesses/new';
   static const businessDetail = '/business/:id';
+  static const goldStores = '/gold/stores';
+  static const goldStoreApply = '/gold/stores/apply';
+  static const goldStoreDetail = '/gold/stores/:id';
   static const publicProfile = '/u/:username';
   static const draft = '/draft';
   static const post = '/post';

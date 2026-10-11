@@ -35,6 +35,7 @@ import '../features/profile/edit_profile_screen.dart';
 import '../features/profile/public_profile_screen.dart';
 import '../features/profile/business_screens.dart';
 import '../features/profile/verification_screen.dart';
+import '../features/gold/gold_stores_screen.dart';
 import '../features/subscription/subscription_screen.dart';
 import '../features/reviews/write_review_screen.dart';
 import '../features/search/search_saved_screen.dart';
@@ -457,6 +458,20 @@ GoRouter createRouter({required GoRouterRefresh refresh}) {
         path: AppRoutes.businessDetail,
         builder: (_, state) => BusinessDetailScreen(
           businessId: int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.goldStores,
+        builder: (_, _) => const GoldStoresScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.goldStoreApply,
+        builder: (_, _) => const GoldStoreApplyScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.goldStoreDetail,
+        builder: (_, state) => GoldStoreDetailScreen(
+          storeId: int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
         ),
       ),
       GoRoute(

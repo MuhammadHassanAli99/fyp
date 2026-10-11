@@ -1,0 +1,497 @@
+% =============================================================================
+% AURELIA — FYP Proposal (Overleaf)
+% Upload this folder to https://www.overleaf.com/ (New Project → Upload Project)
+% or paste main.tex into a Blank Project and Recompile.
+% Filled only from confirmed codebase facts; blanks are intentional.
+% =============================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{setspace}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue,
+  pdftitle={AURELIA FYP Proposal},
+  pdfauthor={FYP Team}
+}
+
+\onehalfspacing
+\setlength{\parskip}{0.4em}
+\setlength{\parindent}{0pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small AURELIA --- FYP Proposal}
+\fancyhead[R]{\small Proposal (FYP--I)}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\title{\textbf{FYP Proposal}\\[0.4em]
+\large AURELIA --- Gold Marketplace Platform}
+\author{BSCS 7th / IET 5th\\Proposal (FYP--I)}
+\date{}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+%% --------------------------------------------------------------------------
+\section*{Cover Information}
+
+\begin{tabularx}{\textwidth}{@{}>{\bfseries}lX@{}}
+Project Title & AURELIA --- Gold Marketplace Platform \\
+Program / Semester & BSCS 7th / IET 5th \\
+FYP Stage & Proposal (FYP--I) \\
+\end{tabularx}
+
+\vspace{0.8em}
+\noindent\textbf{Team Member}
+
+\begin{tabularx}{\textwidth}{@{}*{4}{X}@{}}
+\toprule
+\textbf{Team Member} & \textbf{Registration No.} & \textbf{Email} & \textbf{Phone} \\
+\midrule
+ &  &  &  \\
+ &  &  &  \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.8em}
+\noindent\textbf{Supervisor}
+
+\begin{tabularx}{\textwidth}{@{}*{4}{X}@{}}
+\toprule
+\textbf{Supervisor} & \textbf{Department} & \textbf{Email} & \textbf{Phone} \\
+\midrule
+ &  &  &  \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.8em}
+\noindent\textbf{Co--Supervisor / Industry Mentor (optional)}
+
+\begin{tabularx}{\textwidth}{@{}*{4}{X}@{}}
+\toprule
+\textbf{Name} & \textbf{Organization} & \textbf{Email} & \textbf{Phone} \\
+\midrule
+ &  &  &  \\
+\bottomrule
+\end{tabularx}
+
+%% --------------------------------------------------------------------------
+\section{Abstract (200--300 words)}
+
+AURELIA is a cross--platform marketplace application focused on gold commerce.
+Buyers and sellers can browse, buy, sell, and auction gold--related listings
+(bars, coins, jewellery, and investment gold) through a Flutter client backed by
+a Node.js modular--monolith API.
+
+The platform problem addressed by the implemented system is fragmented,
+low--trust digital gold trading: users need authenticated accounts, verified
+sellers or stores, structured gold attributes (purity/karat, weight units,
+making charges, hallmarks, certificates), searchable listings, and communication
+channels before completing a trade. AURELIA centralizes these concerns in one
+product surface branded as a Gold Marketplace.
+
+Technically, the backend is an Express~5 + TypeScript modular monolith using
+MySQL for persistence, Redis for caching (with in--memory fallback), JWT--based
+authentication, Zod validation, and Socket.io for realtime chat/presence/auction
+rooms. Marketplace domains plug in through a registry interface; the active
+marketplace module in the current codebase is \texttt{gold}. Shared platform
+modules already present include authentication (including OTP, MFA, OAuth,
+passkeys, and device security), KYC/verification, catalog and listings,
+auctions, search/filters/maps, favorites and comparison, chat and calls,
+notifications, subscriptions and payments, reviews, advertisements, AI
+assistance endpoints, moderation, and risk/fraud--related services.
+
+Gold--specific capabilities in code include store applications, purity/rate
+quoting, rate history and forecast endpoints, authenticity/assessment helpers,
+buy/delivery confirmation flows, bidding, certificates/hallmarks, and
+verification requests. The Flutter client exposes corresponding product flows
+for auth, listings, search, maps, chat, payments, seller tools, and gold stores.
+
+Expected outcomes of the project are a working end--to--end gold marketplace
+client and API with the modules listed above. Property and Vehicles marketplace
+schemas exist historically and are currently deactivated in the database; they
+are out of active API scope unless later restored.
+
+%% --------------------------------------------------------------------------
+\section{Problem Significance \& Context}
+
+\subsection{Background \& Motivation}
+
+Gold is traded as bars, coins, jewellery, and investment metal. Digital
+listing, pricing (rate per gram/tola/ounce, making charges, wastage),
+hallmarking/certificates, and buyer--seller communication are all required for
+a usable marketplace. The AURELIA product surfaces these needs under a single
+app tagline: ``Buy, sell and auction gold with confidence.''
+
+Stakeholders reflected in the system design include:
+\begin{itemize}[leftmargin=1.4em]
+  \item End users (guests and registered buyers/sellers)
+  \item Gold stores / businesses applying through store workflows
+  \item Platform operators via admin, moderation, support, and analytics modules
+\end{itemize}
+
+\subsection{Problem Statement}
+
+Buyers and sellers lack a unified, trust--oriented digital channel to list,
+price, verify, search, communicate about, and auction gold items with
+marketplace--specific attributes (purity, weight, hallmarks, certificates, and
+live/quoted rates).
+
+\subsection{Scope \& Assumptions}
+
+\textbf{In scope (confirmed in current codebase):}
+\begin{itemize}[leftmargin=1.4em]
+  \item Flutter client branded AURELIA (Gold Marketplace)
+  \item Modular--monolith API with active \texttt{gold} marketplace module
+  \item Platform capabilities: auth/security, KYC/verification, listings,
+        auctions, search/filters/maps, favorites/compare, chat/calls,
+        notifications, subscriptions/payments, reviews, ads, AI endpoints,
+        moderation/risk, seller/support/admin
+  \item Gold features: stores, catalog/brands/hallmark authorities, rates and
+        quotes, purity standards, authenticity/assessment helpers,
+        buy/delivery, auctions/bids, certificates, verification requests
+\end{itemize}
+
+\textbf{Out of scope / inactive today:}
+\begin{itemize}[leftmargin=1.4em]
+  \item Property and Vehicles marketplace API modules (schema/seed rows exist;
+        deactivated; no active backend marketplace packages)
+\end{itemize}
+
+\textbf{Assumptions / constraints visible in implementation:}
+\begin{itemize}[leftmargin=1.4em]
+  \item Default AI provider is heuristic/offline; an OpenAI--compatible driver
+        is optional via configuration
+  \item Payment gateways without configured drivers fall back to manual
+        settlement paths
+  \item Gold authenticity helpers in code are not chemical assays
+\end{itemize}
+
+%% --------------------------------------------------------------------------
+\section{Literature Review \& Gap Analysis}
+
+\textit{No literature sources are recorded in the repository yet --- matrix left blank.}
+
+\begin{tabularx}{\textwidth}{@{}
+  >{\raggedright\arraybackslash}p{0.8cm}
+  >{\raggedright\arraybackslash}p{1.0cm}
+  >{\raggedright\arraybackslash}p{1.5cm}
+  >{\raggedright\arraybackslash}p{1.6cm}
+  >{\raggedright\arraybackslash}p{1.6cm}
+  >{\raggedright\arraybackslash}p{1.8cm}
+  >{\raggedright\arraybackslash}p{1.8cm}
+  X@{}}
+\toprule
+\textbf{Ref\#} & \textbf{Year} & \textbf{Domain} & \textbf{Method} & \textbf{Dataset} & \textbf{Findings} & \textbf{Gap} & \textbf{Relevance} \\
+\midrule
+ &  &  &  &  &  &  &  \\
+ &  &  &  &  &  &  &  \\
+ &  &  &  &  &  &  &  \\
+\bottomrule
+\end{tabularx}
+
+%% --------------------------------------------------------------------------
+\section{Objectives and Scope}
+
+\begin{tabularx}{\textwidth}{@{}c >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{\#} & \textbf{Objectives} & \textbf{Data Source / Tooling / Technique} \\
+\midrule
+1 & Deliver a Flutter client for browsing and trading gold listings
+  (buy/sell/auction) with auth and localization flows.
+  & Flutter, go\_router, signals, dio, socket\_io\_client, Drift/SQLite \\
+\addlinespace
+2 & Provide a modular--monolith API with a pluggable marketplace registry and
+  an active Gold module.
+  & Node.js $\geq$ 20, Express~5, TypeScript, Zod \\
+\addlinespace
+3 & Support gold commerce data: purity/weight, rates/quotes, stores,
+  hallmarks/certificates, auctions/bids.
+  & MySQL (\texttt{marketplace}), gold migrations/services \\
+\addlinespace
+4 & Provide shared platform services: search/filters/maps, chat/calls,
+  notifications, payments/subscriptions, reviews, KYC, moderation/risk,
+  AI helper endpoints.
+  & MySQL, Redis (cache), Socket.io, JWT, provider adapters \\
+\bottomrule
+\end{tabularx}
+
+%% --------------------------------------------------------------------------
+\section{Methodology \& Technical Approach}
+
+\subsection{System/Algorithm Design}
+
+\textit{[Insert system architecture diagram here]}
+
+High--level architecture present in the repository:
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Client:} Flutter app (\texttt{frontend/}) --- routing, feature
+        modules, local persistence, realtime socket client
+  \item \textbf{API:} Express modular monolith (\texttt{backend/src/}) ---
+        platform routers + marketplace registry mount at \texttt{/gold}
+  \item \textbf{Data:} MySQL schema via numbered migrations; Redis cache;
+        Socket.io rooms for user/conversation/marketplace/auction
+  \item \textbf{Providers:} AI (heuristic default / OpenAI--compatible),
+        payment gateway adapters, mailer
+\end{itemize}
+
+\begin{tabularx}{\textwidth}{@{}
+  >{\raggedright\arraybackslash}p{2.6cm}
+  >{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}p{2.8cm}
+  >{\raggedright\arraybackslash}p{2.8cm}@{}}
+\toprule
+\textbf{Module} & \textbf{Description} & \textbf{Inputs} & \textbf{Outputs} \\
+\midrule
+Flutter client & AURELIA UI and local state & User actions & API/socket calls \\
+Auth \& security & Register/login/OTP/MFA/OAuth/passkeys/devices & Credentials/tokens & Session JWT \\
+Verification/KYC & Document/verification workflows & User/business docs & Verification status \\
+Listings \& auctions & Create/browse/bid on listings & Listing payloads, bids & Listing/auction records \\
+Search/filters/maps & Discovery over catalog/listings & Queries, geo filters & Result sets \\
+Chat/calls/notifications & Realtime communication & Messages/events & Delivered events \\
+Payments/subscriptions & Billing via gateway adapters & Payment intents & Settlement status \\
+AI module & Description, search interpret, price helpers, forecasts, checks & Text/listing context & Heuristic/model responses \\
+Risk/moderation & Trust and abuse controls & Signals/cases & Risk outcomes \\
+Gold marketplace & Stores, rates, purity, authenticity helpers, certificates & Gold attributes & Quotes, gold APIs \\
+Admin/seller/support & Operational dashboards & Operator actions & Config/case updates \\
+\bottomrule
+\end{tabularx}
+
+\subsection{Data Plan (collection, licensing, privacy, preprocessing)}
+
+\begin{tabularx}{\textwidth}{@{}*{4}{>{\raggedright\arraybackslash}X}@{}}
+\toprule
+\textbf{Dataset} & \textbf{Source/License} & \textbf{Features/Labels} & \textbf{Preprocessing} \\
+\midrule
+Marketplace DB schema/seeds & Project migrations \& seed scripts & Platforms, users, listings, gold catalogs/rates, chat, payments, risk tables & SQL migrations; seed scripts \\
+User--generated listings \& media & App users (runtime) & Gold attributes, images/uploads & Zod validation; upload pipeline \\
+ &  &  &  \\
+\bottomrule
+\end{tabularx}
+
+\subsection{Baselines \& Experimental Plan}
+
+\textit{No evaluation baselines or target metrics are defined in the repository.}
+
+\begin{tabularx}{\textwidth}{@{}*{5}{>{\raggedright\arraybackslash}X}@{}}
+\toprule
+\textbf{Baseline} & \textbf{Description} & \textbf{Hyperparams} & \textbf{Expected Outcome} & \textbf{Metrics} \\
+\midrule
+ &  &  &  &  \\
+\bottomrule
+\end{tabularx}
+
+\subsection{Tools \& Resources}
+
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{5cm}X@{}}
+\toprule
+\textbf{Resource/Tool} & \textbf{Purpose} \\
+\midrule
+Flutter / Dart SDK & Cross--platform client \\
+Node.js + TypeScript + Express~5 & HTTP API \\
+MySQL (\texttt{mysql2}) & Primary datastore \\
+Redis & Caching (in--memory fallback available) \\
+Socket.io & Realtime chat/presence/auctions \\
+JWT + Zod & Auth tokens and request validation \\
+Helmet, CORS, rate--limit, Pino & Security headers, CORS, throttling, logging \\
+Nodemailer & Email delivery \\
+Drift / SQLite (client) & Local persistence on device \\
+flutter\_map / geolocator & Maps and location \\
+AI provider adapters & Heuristic default; optional OpenAI--compatible \\
+Payment provider adapters & Stripe/PayPal/bank/regional/manual paths as coded \\
+\bottomrule
+\end{tabularx}
+
+%% --------------------------------------------------------------------------
+\section{Feasibility, Timeline \& Risks}
+
+\subsection{Work Breakdown Structure (WBS) \& Timeline}
+
+\textit{Calendar dates and ownership are not recorded in the repository.}
+
+\begin{tabularx}{\textwidth}{@{}
+  >{\raggedright\arraybackslash}X
+  c c c c
+  >{\raggedright\arraybackslash}p{2.2cm}@{}}
+\toprule
+\textbf{Task/Work Package} & \textbf{Start} & \textbf{End} & \textbf{Days} & \textbf{Deps} & \textbf{By} \\
+\midrule
+Platform core (auth, users, verification, catalog) &  &  &  &  &  \\
+Listings, auctions, search, maps, favorites/compare &  &  &  &  &  \\
+Chat, calls, notifications (Socket.io) &  &  &  &  &  \\
+Payments, subscriptions, ads, reviews &  &  &  &  &  \\
+AI, moderation, risk modules &  &  &  &  &  \\
+Gold marketplace module + Flutter gold/store flows &  &  &  &  &  \\
+Admin / seller / support dashboards &  &  &  &  &  \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.4em}
+\textit{Paste a Gantt chart below.}
+
+\subsection{Risk Register}
+
+\begin{tabularx}{\textwidth}{@{}
+  >{\raggedright\arraybackslash}X
+  c c
+  >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Risk} & \textbf{P (L/M/H)} & \textbf{I (L/M/H)} & \textbf{Mitigation Plan} \\
+\midrule
+Payment gateways unconfigured in deployment &  &  & Use configured adapters or manual settlement path already present in code \\
+\addlinespace
+AI quality depends on provider configuration &  &  & Keep heuristic driver as fallback; enable OpenAI--compatible driver when keys exist \\
+\addlinespace
+Property/Vehicles scope confusion vs Gold--only API &  &  & Treat deactivated marketplaces as out of scope unless modules are restored \\
+\addlinespace
+Trust features (AML/authenticity) partial/placeholder in places &  &  & Document limits; avoid claiming chemical assay or licensed AML without wiring \\
+\addlinespace
+ &  &  &  \\
+\bottomrule
+\end{tabularx}
+
+%% --------------------------------------------------------------------------
+\section{Ethics, SDGs, and IP Considerations}
+
+\subsection{Ethics \& Data Protection}
+
+The system includes authentication, device/security controls, KYC/verification
+document workflows, and risk/moderation modules that process sensitive user and
+business data. Deployment must protect credentials, personal data, and uploaded
+documents according to applicable institutional and legal rules.
+
+\textit{Institutional ethics-board process / consent forms: unknown --- left blank.}
+
+\subsection{Societal Impact}
+
+\textit{SDG mapping not specified in the repository --- left blank.}
+
+\subsection{IP \& Publication}
+
+\textit{Patent/paper plan not specified in the repository --- left blank.}
+
+Third--party libraries used by the project retain their own licenses
+(Flutter/Dart packages, Node npm packages).
+
+%% --------------------------------------------------------------------------
+\section{Expected Outcomes \& Deliverables}
+
+\begin{tabularx}{\textwidth}{@{}*{5}{>{\raggedright\arraybackslash}X}@{}}
+\toprule
+\textbf{Deliverable} & \textbf{Description} & \textbf{Acceptance Criteria} & \textbf{Due} & \textbf{Owner} \\
+\midrule
+Flutter client & AURELIA app with gold marketplace UX flows & Builds/runs; core gold browse/auth/list flows usable &  &  \\
+\addlinespace
+Backend API & Modular monolith with \texttt{/gold} and platform routes & Health OK; key modules respond per routes &  &  \\
+\addlinespace
+Database migrations/seeds & Marketplace schema and gold data model & Migrations apply cleanly &  &  \\
+\addlinespace
+Gold commerce features & Stores, rates/quotes, auctions, certificates/verification hooks & Gold endpoints and client screens operate end--to--end &  &  \\
+\addlinespace
+Trust \& ops surfaces & KYC, moderation/risk, admin/seller/support & Modules reachable; basic workflows executable &  &  \\
+\bottomrule
+\end{tabularx}
+
+%% --------------------------------------------------------------------------
+\section{Evaluation Plan \& Success Criteria}
+
+\textit{Numeric targets are not defined in the repository.}
+
+\begin{tabularx}{\textwidth}{@{}*{3}{>{\raggedright\arraybackslash}X}@{}}
+\toprule
+\textbf{Metric} & \textbf{Dataset/Testbed} & \textbf{Target/Threshold} \\
+\midrule
+API health / DB connectivity & Local or staging environment &  \\
+Auth flows (register/login/OTP/MFA as enabled) & Test accounts &  \\
+Gold listing create/search/view & Seeded + test listings &  \\
+Auction bid path & Test auction listing &  \\
+Chat message delivery (Socket.io) & Two test clients &  \\
+ &  &  \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.3em}
+Map metrics to the objectives in Section~4 after targets are agreed with the supervisor.
+
+%% --------------------------------------------------------------------------
+\section{Project Management \& Meetings}
+
+\subsection{Meeting Cadence}
+
+Weekly with Supervisor; Meeting Log maintained (date--wise \& task--wise).
+
+\subsection{Roles \& Responsibilities}
+
+\begin{tabularx}{\textwidth}{@{}*{3}{X}@{}}
+\toprule
+\textbf{Area/Task} & \textbf{Member(s)} & \textbf{Supervisor/Co--Sup Role} \\
+\midrule
+ &  &  \\
+ &  &  \\
+\bottomrule
+\end{tabularx}
+
+\subsection{Annex E}
+
+Team Contribution Sheet will be updated and submitted before each evaluation.
+
+%% --------------------------------------------------------------------------
+\section{Compliance Checklist (Attach at Submission)}
+
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{8.5cm} c X@{}}
+\toprule
+\textbf{Item} & \textbf{Yes/No} & \textbf{Notes} \\
+\midrule
+1. Abstract within 200--300 words &  & Drafted from codebase facts \\
+2. Problem statement precise; significance with evidence &  & Product-feature based; no external market statistics in repo \\
+3. Gap articulated vs.\ literature (matrix attached) &  & Literature matrix blank --- sources unknown \\
+4. Objectives &  & Filled from implemented scope \\
+5. Methodology sound; baselines defined; evaluation plan ready &  & Methodology filled; baselines/targets blank \\
+6. Data plan &  & Schema/seeds and UGC noted \\
+7. WBS/timeline realistic; risks with mitigations &  & Tasks listed; dates blank; risks from known code limits \\
+8. SDG/Ethics &  & Ethics notes partial; SDG blank \\
+9. Evaluation Plan added &  & Metric names only; thresholds blank \\
+10. Annex E (Team Contribution Sheet) attached &  &  \\
+\bottomrule
+\end{tabularx}
+
+%% --------------------------------------------------------------------------
+\section{Declarations \& Signatures}
+
+We declare that the information provided is accurate and that we will adhere to
+NSU FYP rules \& guidelines.
+
+\begin{tabularx}{\textwidth}{@{}*{3}{X}@{}}
+\toprule
+\textbf{Team Member} & \textbf{Signature} & \textbf{Date} \\
+\midrule
+ &  &  \\
+ &  &  \\
+\bottomrule
+\end{tabularx}
+
+\vspace{1.5em}
+\noindent\textbf{Supervisor Endorsement:} \underline{\hspace{6.5cm}}
+\quad Date: \_\_\_\_/\_\_\_\_/\_\_\_\_\_
+
+\vspace{1em}
+\noindent\textbf{FYP Coordinator Review:} \underline{\hspace{6.5cm}}
+\quad Date: \_\_\_\_/\_\_\_\_/\_\_\_\_\_
+
+\end{document}

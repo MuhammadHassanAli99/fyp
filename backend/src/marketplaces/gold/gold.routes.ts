@@ -24,8 +24,145 @@ import { buyGoldListing, confirmGoldDelivery } from './gold.commerce';
 import { createVerificationRequest, getVerificationRequest, listVerificationRequests, recordVerificationResult } from './gold.verification';
 import { getComplianceRule } from './gold.compliance';
 import { getAuction, getAuctionByListing, listBids, placeBid } from '../../modules/auctions/auctions.service';
+import {
+  applyForGoldStore,
+  getGoldStore,
+  getGoldStoreBySlug,
+  listMyGoldStores,
+  listPublicGoldStores,
+  submitGoldStoreApplication,
+  updateGoldStoreProfile,
+  GOLD_STORE_MIN_LISTINGS,
+  GOLD_STORE_MAX_MIN_LISTINGS,
+} from './gold.stores';
+
+const applyGoldStoreSchema = z.object({
+  legalName: z.string().trim().min(2).max(191),
+  tradeName: z.string().trim().max(191).optional(),
+  description: z.string().trim().max(5000).optional(),
+  website: z.string().url().max(255).optional(),
+  registrationNo: z.string().trim().max(96).optional(),
+  licenseReference: z.string().trim().min(2).max(191),
+  taxId: z.string().trim().max(96).optional(),
+  countryId: z.coerce.number().int().positive().optional(),
+  regionId: z.coerce.number().int().positive().optional(),
+  cityId: z.coerce.number().int().positive().optional(),
+  address: z.string().trim().min(5).max(255),
+  contactPhone: z.string().trim().min(6).max(24),
+  contactEmail: z.string().email().max(191).optional(),
+  establishedYear: z.coerce.number().int().min(1800).max(2100).optional(),
+  certifications: z.array(z.string().trim().max(96)).max(20).optional(),
+  offerings: z
+    .array(
+      z.object({
+        category: z.string().trim().min(1).max(64),
+        purity: z.string().trim().max(32).optional(),
+      }),
+    )
+    .max(40)
+    .optional(),
+  notes: z.string().trim().max(1000).optional(),
+  minListingsRequired: z.coerce
+    .number()
+    .int()
+    .min(GOLD_STORE_MIN_LISTINGS)
+    .max(GOLD_STORE_MAX_MIN_LISTINGS)
+    .optional(),
+});
 
 export const goldRouter = Router();
+
+goldRouter.get(
+  '/stores',
+  validate({
+    query: z.object({
+      q: z.string().trim().max(120).optional(),
+      cityId: z.coerce.number().int().positive().optional(),
+      page: z.coerce.number().int().min(1).default(1),
+      perPage: z.coerce.number().int().min(1).max(50).default(20),
+    }),
+  }),
+  asyncHandler(async (req, res) => {
+    const q = query<{ q?: string; cityId?: number; page: number; perPage: number }>(req);
+    withCache(res, 60);
+    return ok(
+      res,
+      await listPublicGoldStores({
+        countryId: req.context.countryId,
+        cityId: q.cityId,
+        q: q.q,
+        page: q.page,
+        perPage: q.perPage,
+      }),
+    );
+  }),
+);
+
+goldRouter.get(
+  '/stores/mine',
+  authenticate,
+  requireAuth,
+  asyncHandler(async (req, res) => ok(res, await listMyGoldStores(req.auth!.userId))),
+);
+
+goldRouter.get(
+  '/stores/s/:slug',
+  authenticate,
+  validate({ params: z.object({ slug: z.string().min(2).max(200) }) }),
+  asyncHandler(async (req, res) => {
+    const { slug } = params<{ slug: string }>(req);
+    return ok(res, await getGoldStoreBySlug(slug, req.auth?.userId ?? null, req.auth?.isStaff ?? false));
+  }),
+);
+
+goldRouter.get(
+  '/stores/:id',
+  authenticate,
+  validate({ params: z.object({ id: z.coerce.number().int().positive() }) }),
+  asyncHandler(async (req, res) => {
+    const { id } = params<{ id: number }>(req);
+    return ok(res, await getGoldStore(id, req.auth?.userId ?? null, req.auth?.isStaff ?? false));
+  }),
+);
+
+goldRouter.post(
+  '/stores/apply',
+  authenticate,
+  requireAuth,
+  writeRateLimit,
+  riskGuard('enforce'),
+  validate({ body: applyGoldStoreSchema }),
+  asyncHandler(async (req, res) => {
+    return created(res, await applyForGoldStore(req.auth!.userId, body(req)));
+  }),
+);
+
+goldRouter.post(
+  '/stores/:id/submit',
+  authenticate,
+  requireAuth,
+  writeRateLimit,
+  validate({ params: z.object({ id: z.coerce.number().int().positive() }) }),
+  asyncHandler(async (req, res) => {
+    const { id } = params<{ id: number }>(req);
+    return ok(res, await submitGoldStoreApplication(id, req.auth!.userId, req.auth!.isStaff));
+  }),
+);
+
+goldRouter.patch(
+  '/stores/:id',
+  authenticate,
+  requireAuth,
+  writeRateLimit,
+  validate({
+    params: z.object({ id: z.coerce.number().int().positive() }),
+    body: applyGoldStoreSchema.partial(),
+  }),
+  asyncHandler(async (req, res) => {
+    const { id } = params<{ id: number }>(req);
+    return ok(res, await updateGoldStoreProfile(id, req.auth!.userId, req.auth!.isStaff, body(req)));
+  }),
+);
 
 goldRouter.get(
   '/catalog',

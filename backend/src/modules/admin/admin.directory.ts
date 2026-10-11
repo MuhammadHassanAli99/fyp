@@ -273,6 +273,10 @@ export async function getCompany(auth: AuthPrincipal, id: number) {
 export async function setCompanyStatus(req: Request, id: number, status: string, reason: string) {
   const company = await getCompany(req.auth!, id);
   await execute(`UPDATE business_profiles SET status = ? WHERE id = ?`, [status, id]);
+  if (company.kind === 'gold_shop') {
+    const { evaluateGoldStorefront } = await import('../../marketplaces/gold/gold.stores');
+    await evaluateGoldStorefront(id).catch(() => undefined);
+  }
   await writeAdminAudit({
     req,
     action: `business.${status}`,

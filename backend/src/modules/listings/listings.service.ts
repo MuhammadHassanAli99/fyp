@@ -366,8 +366,13 @@ export async function createListing(userId: number, input: CreateListingInput): 
   }
 
   if (input.businessId) {
-    const { assertBusinessPermission } = await import('../business/business.service');
-    await assertBusinessPermission(input.businessId, userId, 'listing.post');
+    if (marketplace.code === 'gold') {
+      const { assertCanPostAsGoldStore } = await import('../../marketplaces/gold/gold.stores');
+      await assertCanPostAsGoldStore(input.businessId, userId);
+    } else {
+      const { assertBusinessPermission } = await import('../business/business.service');
+      await assertBusinessPermission(input.businessId, userId, 'listing.post');
+    }
   }
 
   const validation = await module.validateDetails(input.details, {

@@ -190,3 +190,9 @@ ON DUPLICATE KEY UPDATE
   upper_bound = VALUES(upper_bound),
   confidence = VALUES(confidence),
   generated_at = CURRENT_TIMESTAMP;
+
+-- -----------------------------------------------------------------------------
+-- Gold stores (brand shops): see migration 040_gold_stores.sql.
+-- Public storefronts require an approved gold_shop plus 3–4 properly posted
+-- ads (photo, karat, weight). Personal ads use listings.business_id IS NULL.
+-- -----------------------------------------------------------------------------
