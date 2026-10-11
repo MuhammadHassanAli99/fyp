@@ -6,9 +6,6 @@ import { definitionByKey } from './filters.definitions';
 
 const FACET_KEYS: Record<string, string[]> = {
   gold: ['karat', 'form', 'certified', 'hallmarked'],
-  property: ['propertyKind', 'bedrooms', 'furnishing', 'usageType'],
-  vehicles: ['make', 'model', 'transmission', 'fuelType', 'bodyType', 'year'],
-  parts: ['partCategory', 'partBrand', 'condition'],
 };
 
 const JSON_PATH: Record<string, string> = {
@@ -16,25 +13,11 @@ const JSON_PATH: Record<string, string> = {
   form: '$.form',
   certified: '$.certified',
   hallmarked: '$.hallmarked',
-  propertyKind: '$.propertyKind',
-  bedrooms: '$.bedrooms',
-  furnishing: '$.furnishing',
-  usageType: '$.usageType',
-  make: '$.make',
-  model: '$.model',
-  transmission: '$.transmission',
-  fuelType: '$.fuelType',
-  bodyType: '$.bodyType',
-  year: '$.year',
-  partCategory: '$.partCategory',
-  partBrand: '$.partBrand',
   condition: '$.condition',
 };
 
 function marketplaceId(code: string | null): number | null {
   if (code === 'gold') return 1;
-  if (code === 'property') return 2;
-  if (code === 'vehicles') return 3;
   return null;
 }
 
@@ -65,8 +48,8 @@ function labelFor(key: string, value: string): string {
  * same geo/price/marketplace context. Unknown JSON paths are skipped.
  */
 export async function computeFacets(dsl: SearchQuery): Promise<FacetGroup[]> {
-  const marketplace = dsl.intent === 'parts' ? 'parts' : dsl.marketplace;
-  if (!marketplace || marketplace === null) return [];
+  const marketplace = dsl.marketplace;
+  if (!marketplace) return [];
   const keys = FACET_KEYS[marketplace] ?? [];
   const groups: FacetGroup[] = [];
 

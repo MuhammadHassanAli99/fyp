@@ -12,14 +12,14 @@ class AppLocalizationsUr extends AppLocalizations {
   String get appName => 'AURELIA';
 
   @override
-  String get appTagline => 'سونا · جائیداد · گاڑیاں';
+  String get appTagline => 'گولڈ مارکیٹ';
 
   @override
   String get splashHeadline => 'دنیا بھر میں پریمیم لسٹنگز دریافت کریں';
 
   @override
   String get splashSubtitle =>
-      'ایک اکاؤنٹ۔ تین مارکیٹ پلیس۔ عالمی تجارت کے لیے.';
+      'اعتماد کے ساتھ سونا خریدیں، بیچیں اور نیلام کریں۔';
 
   @override
   String get getStarted => 'شروع کریں';

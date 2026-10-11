@@ -1,8 +1,9 @@
 -- =============================================================================
 -- 14  Favorites platform demo data
 --     Deterministic ids. Idempotent via INSERT ... ON DUPLICATE KEY.
---     Depends on: 06_demo_listings (seller 9001, listings 9101–9106),
---                 03_marketplaces, 002 users.
+--     Depends on: 06_demo_listings (seller 9001, listings 9101–9102; the Gold
+--                 demo listings are all that remain now that Property and
+--                 Vehicles are inactive), 03_marketplaces, 002 users.
 -- =============================================================================
 
 USE marketplace;
@@ -46,16 +47,16 @@ INSERT INTO user_roles (user_id, role_id, marketplace_id, granted_at)
 VALUES (9002, 1, NULL, CURRENT_TIMESTAMP)
 ON DUPLICATE KEY UPDATE granted_at = VALUES(granted_at);
 
--- Default + marketplace-scoped collections (ids pinned)
+-- Default + marketplace-scoped collections (ids pinned). The Property
+-- ("Karachi Properties", marketplace 2) and Vehicles ("Family Cars" /
+-- "Toyota", marketplace 3) demo collections were removed with those
+-- marketplaces.
 INSERT INTO favorite_collections (
   id, user_id, marketplace_id, parent_id, name, description, icon, color,
   is_default, is_public, visibility, share_token, item_count, sort_order
 ) VALUES
   (9401, 9002, NULL, NULL, 'Saved', 'Default saved items', 'heart', '#D4AF37', TRUE, FALSE, 'private', NULL, 0, 0),
-  (9402, 9002, 1, NULL, 'Investment Gold', 'Bars and jewellery to watch', 'gem', '#D4AF37', FALSE, FALSE, 'private', NULL, 0, 10),
-  (9403, 9002, 2, NULL, 'Karachi Properties', 'Homes in DHA and around', 'building', '#0EA5E9', FALSE, FALSE, 'private', NULL, 0, 20),
-  (9404, 9002, 3, NULL, 'Family Cars', 'Daily drivers', 'car', '#7C3AED', FALSE, FALSE, 'private', NULL, 0, 30),
-  (9405, 9002, 3, 9404, 'Toyota', 'Toyota shortlist', 'car', '#7C3AED', FALSE, FALSE, 'private', NULL, 0, 0)
+  (9402, 9002, 1, NULL, 'Investment Gold', 'Bars and jewellery to watch', 'gem', '#D4AF37', FALSE, FALSE, 'private', NULL, 0, 10)
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   description = VALUES(description),
@@ -64,15 +65,14 @@ ON DUPLICATE KEY UPDATE
   visibility = VALUES(visibility),
   is_default = VALUES(is_default);
 
--- Universal favorites across gold / property / vehicles
+-- Gold favorites only (Property/Vehicles demo listings and their favorites
+-- 9503/9504 were removed with those marketplaces).
 INSERT INTO favorites (
   id, user_id, listing_id, marketplace_id, entity_type, entity_id, collection_id,
   note, title_snapshot, price_at_save, currency, notify_price_drop, notify_status_change
 ) VALUES
   (9501, 9002, 9101, 1, 'listing', 9101, 9402, 'Bridal set for comparison', '22K Gold Necklace Set — Bridal', 485000.00, 'PKR', TRUE, TRUE),
-  (9502, 9002, 9102, 1, 'listing', 9102, 9402, NULL, '24K Investment Gold Bar 10g', 312000.00, 'PKR', TRUE, TRUE),
-  (9503, 9002, 9103, 2, 'listing', 9103, 9403, 'DHA apartment', '3 Bed Apartment in DHA Phase 5', NULL, 'PKR', TRUE, TRUE),
-  (9504, 9002, 9105, 3, 'listing', 9105, 9405, NULL, NULL, NULL, 'PKR', TRUE, TRUE)
+  (9502, 9002, 9102, 1, 'listing', 9102, 9402, NULL, '24K Investment Gold Bar 10g', 312000.00, 'PKR', TRUE, TRUE)
 ON DUPLICATE KEY UPDATE
   collection_id = VALUES(collection_id),
   note = VALUES(note),
@@ -95,4 +95,4 @@ UPDATE listings l
    SET favorite_count = (
      SELECT COUNT(*) FROM favorites f WHERE f.listing_id = l.id
    )
- WHERE l.id IN (9101, 9102, 9103, 9104, 9105, 9106);
+ WHERE l.id IN (9101, 9102);

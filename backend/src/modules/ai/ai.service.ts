@@ -24,8 +24,6 @@ export { getAiJob, acceptGeneratedContent };
 
 function marketplaceIdFromCode(code: string | null | undefined): number | null {
   if (code === 'gold') return 1;
-  if (code === 'property') return 2;
-  if (code === 'vehicles') return 3;
   return null;
 }
 

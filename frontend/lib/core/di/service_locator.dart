@@ -31,7 +31,6 @@ import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/catalog_repository.dart';
 import '../../data/remote/favorites_api.dart';
 import '../../data/repositories/favorites_repository.dart';
-import '../../data/remote/marketplace_apis.dart';
 import '../../data/remote/gold_api.dart';
 import '../../data/remote/chat_api.dart';
 import '../../data/remote/notifications_api.dart';
@@ -40,8 +39,6 @@ import '../../data/remote/payments_api.dart';
 import '../../data/remote/ai_api.dart';
 import '../../data/repositories/listings_repository.dart';
 import '../../data/repositories/gold_repository.dart';
-import '../../data/repositories/property_repository.dart';
-import '../../data/repositories/vehicle_repository.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../data/repositories/comparison_repository.dart';
 import '../../data/repositories/chat_repository.dart';
@@ -110,10 +107,6 @@ class ServiceLocator {
   late final CompareStore compareStore;
   late final FavoritesStore favoritesStore;
   late final SettingsStore settingsStore;
-  late final PropertyApi propertyApi;
-  late final PropertyRepository propertyRepository;
-  late final VehiclesApi vehiclesApi;
-  late final VehicleRepository vehicleRepository;
   late final GoldApi goldApi;
   late final GoldRepository goldRepository;
   late final LocaleApi localeApi;
@@ -269,17 +262,12 @@ class ServiceLocator {
     securityStore = SecurityStore(securityApi);
     supportApi = SupportApi(apiClient);
     supportStore = SupportStore(supportApi, realtimeClient);
-    propertyApi = PropertyApi(apiClient);
-    propertyRepository = PropertyRepository(propertyApi);
-    vehiclesApi = VehiclesApi(apiClient);
-    vehicleRepository = VehicleRepository(vehiclesApi);
     goldApi = GoldApi(apiClient);
     goldRepository = GoldRepository(goldApi);
     compareStore = CompareStore(
       comparisonRepository,
       settingsRepository,
       listingsRepository,
-      vehiclesApi,
     );
     favoritesStore = FavoritesStore(favoritesRepository, authRepository, realtimeClient);
     favoritesStore.listen();

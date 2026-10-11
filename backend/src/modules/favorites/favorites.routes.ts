@@ -37,7 +37,7 @@ favoritesRouter.get(
       page: z.coerce.number().int().min(1).default(1),
       perPage: z.coerce.number().int().min(1).max(100).default(24),
       collectionId: z.coerce.number().int().positive().optional(),
-      marketplace: z.enum(['gold', 'property', 'vehicles']).optional(),
+      marketplace: z.enum(['gold']).optional(),
       entityType: z.enum(FAVORITE_ENTITY_TYPES).optional(),
       categoryId: z.coerce.number().int().positive().optional(),
       q: z.string().trim().max(120).optional(),
@@ -49,7 +49,7 @@ favoritesRouter.get(
       page: number;
       perPage: number;
       collectionId?: number;
-      marketplace?: 'gold' | 'property' | 'vehicles';
+      marketplace?: 'gold';
       entityType?: 'listing' | 'vehicle_part';
       categoryId?: number;
       q?: string;

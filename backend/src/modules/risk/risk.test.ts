@@ -9,8 +9,6 @@ import { reviewStateFrom } from './risk.review';
 import { contentFingerprint } from './risk.image';
 import { validateDocumentBuffer } from './risk.document';
 import { marketplaceSignalToEngine } from './risk.listing';
-import { PROPERTY_FRAUD_AUTO_BAN } from '../../marketplaces/property/property.rules';
-import { VEHICLE_FRAUD_AUTO_BAN } from '../../marketplaces/vehicles/vehicles.rules';
 
 describe('Trust & Risk policy', () => {
   it('never treats VPN/proxy/root/emulator/shared-device as automatic fraud', () => {
@@ -157,11 +155,6 @@ describe('reviews, listings, documents, payments', () => {
     assert.equal(marketplaceSignalToEngine('duplicate_images'), 'stolen_media');
     assert.equal(marketplaceSignalToEngine('shared_device'), 'shared_device_accounts');
     assert.equal(marketplaceSignalToEngine('duplicate_vin'), 'duplicate_vin');
-  });
-
-  it('never auto-bans from a marketplace fraud pipeline', () => {
-    assert.equal(PROPERTY_FRAUD_AUTO_BAN, false);
-    assert.equal(VEHICLE_FRAUD_AUTO_BAN, false);
   });
 
   it('fingerprints identical buffers the same way', () => {

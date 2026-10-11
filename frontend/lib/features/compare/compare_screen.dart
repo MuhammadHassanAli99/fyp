@@ -10,7 +10,6 @@ import '../../core/result/async_state.dart';
 import '../../data/models/comparison_model.dart';
 import '../../shared/widgets/app_scaffold.dart';
 import 'compare_store.dart';
-import 'vehicle_car_picker_sheet.dart';
 
 class CompareScreen extends StatefulWidget {
   const CompareScreen({super.key});
@@ -26,15 +25,6 @@ class _CompareScreenState extends State<CompareScreen> {
   void initState() {
     super.initState();
     _store = ServiceLocator.instance.compareStore;
-  }
-
-  Future<void> _pickCar(int index) async {
-    final selected = await showVehicleCarPicker(
-      context: context,
-      vehiclesApi: _store.vehiclesApi,
-      initial: _store.activeSlots[index],
-    );
-    if (selected != null) _store.setSlot(index, selected);
   }
 
   @override
@@ -72,51 +62,12 @@ class _CompareScreenState extends State<CompareScreen> {
       body: SignalBuilder(
         builder: (context) {
           final state = _store.comparison.value;
-          final isVehicles = _store.isVehicles;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (isVehicles) ...[
-                  _UsedNewTabs(
-                    kind: _store.vehicleKind.value,
-                    onChanged: _store.setVehicleKind,
-                  ),
-                  const SizedBox(height: 16),
-                  _VehicleSlotRow(
-                    slots: _store.activeSlots,
-                    onPick: _pickCar,
-                    onClear: _store.clearSlot,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      TextButton(
-                        onPressed: _store.clearActiveSelection,
-                        child: const Text('Clear'),
-                      ),
-                      const Spacer(),
-                      FilledButton(
-                        onPressed: _store.filledSlotCount >= 2 && !state.isLoading
-                            ? _store.runManualCompare
-                            : null,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.success,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 28,
-                            vertical: 12,
-                          ),
-                        ),
-                        child: Text(l10n.manualCompare == 'Manual Compare'
-                            ? 'Compare'
-                            : l10n.manualCompare),
-                      ),
-                    ],
-                  ),
-                ] else ...[
                   if (_store.shouldAutoAi.value)
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -179,7 +130,6 @@ class _CompareScreenState extends State<CompareScreen> {
                         child: const Text('Compare'),
                       ),
                     ),
-                ],
                 const SizedBox(height: 20),
                 if (state.isLoading) const LoadingView(message: 'Comparing…'),
                 if (state case AsyncData(:final data)) ...[
@@ -192,13 +142,6 @@ class _CompareScreenState extends State<CompareScreen> {
                   ),
                   const SizedBox(height: 24),
                   _AiReportSection(comparison: data),
-                  if (_store.suggestions.value.isNotEmpty) ...[
-                    const SizedBox(height: 28),
-                    _SuggestionsCarousel(
-                      pairs: _store.suggestions.value,
-                      onTap: _store.applySuggestion,
-                    ),
-                  ],
                 ],
                 if (state case AsyncError(:final message))
                   EmptyState(
@@ -211,211 +154,16 @@ class _CompareScreenState extends State<CompareScreen> {
                 if (!state.isLoading &&
                     state is! AsyncData &&
                     state is! AsyncError &&
-                    ((isVehicles && _store.filledSlotCount == 0) ||
-                        (!isVehicles && _store.listingIds.value.isEmpty)))
-                  EmptyState(
-                    title: l10n.compare,
-                    subtitle: isVehicles
-                        ? 'Select 2–3 cars (used or new), then tap Compare.'
-                        : 'Add listings from the feed to compare side by side.',
+                    _store.listingIds.value.isEmpty)
+                  const EmptyState(
+                    title: 'Compare',
+                    subtitle: 'Add listings from the feed to compare side by side.',
                   ),
               ],
             ),
           );
         },
       ),
-    );
-  }
-}
-
-class _UsedNewTabs extends StatelessWidget {
-  const _UsedNewTabs({required this.kind, required this.onChanged});
-
-  final VehicleCompareKind kind;
-  final ValueChanged<VehicleCompareKind> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.charcoalSurface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.stoneDark),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _TabChip(
-              label: 'Used cars',
-              selected: kind == VehicleCompareKind.used,
-              onTap: () => onChanged(VehicleCompareKind.used),
-            ),
-          ),
-          Expanded(
-            child: _TabChip(
-              label: 'New cars',
-              selected: kind == VehicleCompareKind.brandNew,
-              onTap: () => onChanged(VehicleCompareKind.brandNew),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TabChip extends StatelessWidget {
-  const _TabChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? AppColors.gold.withValues(alpha: 0.2) : Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: selected ? AppColors.gold : AppColors.stone.withValues(alpha: 0.7),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _VehicleSlotRow extends StatelessWidget {
-  const _VehicleSlotRow({
-    required this.slots,
-    required this.onPick,
-    required this.onClear,
-  });
-
-  final List<CompareCarSlot?> slots;
-  final ValueChanged<int> onPick;
-  final ValueChanged<int> onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final narrow = constraints.maxWidth < 720;
-        final children = [
-          for (var i = 0; i < 3; i++)
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(right: i < 2 ? 10 : 0),
-                child: _SlotField(
-                  index: i,
-                  slot: i < slots.length ? slots[i] : null,
-                  onPick: () => onPick(i),
-                  onClear: () => onClear(i),
-                ),
-              ),
-            ),
-        ];
-        if (narrow) {
-          return Column(
-            children: [
-              for (var i = 0; i < 3; i++)
-                Padding(
-                  padding: EdgeInsets.only(bottom: i < 2 ? 10 : 0),
-                  child: _SlotField(
-                    index: i,
-                    slot: i < slots.length ? slots[i] : null,
-                    onPick: () => onPick(i),
-                    onClear: () => onClear(i),
-                  ),
-                ),
-            ],
-          );
-        }
-        return Row(children: children);
-      },
-    );
-  }
-}
-
-class _SlotField extends StatelessWidget {
-  const _SlotField({
-    required this.index,
-    required this.slot,
-    required this.onPick,
-    required this.onClear,
-  });
-
-  final int index;
-  final CompareCarSlot? slot;
-  final VoidCallback onPick;
-  final VoidCallback onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    final filled = slot?.isFilled == true;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'Select Car-${index + 1}',
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 6),
-        InkWell(
-          onTap: onPick,
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.stoneDark),
-              borderRadius: BorderRadius.circular(8),
-              color: AppColors.charcoalSurface,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    filled ? slot!.displayLabel : 'Make / Model / Version',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: filled
-                          ? AppColors.stone
-                          : AppColors.stone.withValues(alpha: 0.45),
-                      fontWeight: filled ? FontWeight.w600 : FontWeight.w400,
-                    ),
-                  ),
-                ),
-                if (filled)
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    onPressed: onClear,
-                    icon: const Icon(Icons.close, size: 18),
-                  )
-                else
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    color: AppColors.stone.withValues(alpha: 0.5),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -880,174 +628,3 @@ class _AiReportSection extends StatelessWidget {
   }
 }
 
-class _SuggestionsCarousel extends StatelessWidget {
-  const _SuggestionsCarousel({
-    required this.pairs,
-    required this.onTap,
-  });
-
-  final List<CompareSuggestionPair> pairs;
-  final ValueChanged<CompareSuggestionPair> onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final title = pairs.first.anchorTitle;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          '$title Comparisons with similar cars',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 168,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: pairs.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              final pair = pairs[index];
-              return _SuggestionCard(
-                pair: pair,
-                onTap: () => onTap(pair),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SuggestionCard extends StatelessWidget {
-  const _SuggestionCard({required this.pair, required this.onTap});
-
-  final CompareSuggestionPair pair;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        width: 260,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.charcoalSurface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.stoneDark),
-        ),
-        child: Column(
-          children: [
-            _SuggestionHalf(item: pair.left, imageLeft: true),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Divider(
-                      color: AppColors.stone.withValues(alpha: 0.25),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      'vs',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.stone.withValues(alpha: 0.55),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Divider(
-                      color: AppColors.stone.withValues(alpha: 0.25),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            _SuggestionHalf(item: pair.right, imageLeft: false),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SuggestionHalf extends StatelessWidget {
-  const _SuggestionHalf({required this.item, required this.imageLeft});
-
-  final CompareItem item;
-  final bool imageLeft;
-
-  @override
-  Widget build(BuildContext context) {
-    final thumb = SizedBox(
-      width: 56,
-      height: 40,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: item.imageUrl != null && item.imageUrl!.isNotEmpty
-            ? Image.network(
-                item.imageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => ColoredBox(
-                  color: AppColors.charcoal,
-                  child: Icon(
-                    Icons.directions_car,
-                    size: 18,
-                    color: AppColors.stone.withValues(alpha: 0.4),
-                  ),
-                ),
-              )
-            : ColoredBox(
-                color: AppColors.charcoal,
-                child: Icon(
-                  Icons.directions_car,
-                  size: 18,
-                  color: AppColors.stone.withValues(alpha: 0.4),
-                ),
-              ),
-      ),
-    );
-
-    final text = Expanded(
-      child: Column(
-        crossAxisAlignment:
-            imageLeft ? CrossAxisAlignment.start : CrossAxisAlignment.end,
-        children: [
-          Text(
-            item.title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-          ),
-          if (item.price != null)
-            Text(
-              '${item.currency ?? ''} ${_shortPrice(item.price!)}',
-              style: const TextStyle(
-                color: AppColors.success,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-        ],
-      ),
-    );
-
-    return Row(
-      children: imageLeft ? [thumb, const SizedBox(width: 8), text] : [text, const SizedBox(width: 8), thumb],
-    );
-  }
-
-  String _shortPrice(double price) {
-    if (price >= 100000) {
-      return '${(price / 100000).toStringAsFixed(2)} lacs';
-    }
-    return price.toStringAsFixed(0);
-  }
-}

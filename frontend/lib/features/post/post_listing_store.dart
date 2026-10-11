@@ -12,14 +12,10 @@ import '../../data/models/create_listing_input.dart';
 import '../../data/models/gold_models.dart';
 import '../../data/models/listing_completeness.dart';
 import '../../data/models/marketplace_model.dart';
-import '../../data/models/property_models.dart';
-import '../../data/models/vehicle_models.dart';
-import '../../data/remote/marketplace_apis.dart';
 import '../../data/repositories/catalog_repository.dart';
 import '../../data/repositories/gold_repository.dart';
 import '../../data/repositories/listings_repository.dart';
 import '../../data/repositories/profile_repository.dart';
-import '../../data/repositories/property_repository.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../data/repositories/ai_repository.dart';
 
@@ -39,10 +35,8 @@ class PostListingStore {
     required this.listings,
     required this.settings,
     required this.prefs,
-    required this.vehiclesApi,
     this.profile,
     this.gold,
-    this.property,
     this.database,
     this.ai,
   }) {
@@ -55,10 +49,8 @@ class PostListingStore {
   final ListingsRepository listings;
   final SettingsRepository settings;
   final PrefsStorage prefs;
-  final VehiclesApi vehiclesApi;
   final ProfileRepository? profile;
   final GoldRepository? gold;
-  final PropertyRepository? property;
   final AppDatabase? database;
   final AiRepository? ai;
 
@@ -121,38 +113,6 @@ class PostListingStore {
   final auctionStartPrice = signal('');
   final auctionIncrement = signal('1');
   final auctionHours = signal('24');
-
-  // Property
-  final propertyKind = signal('apartment');
-  final areaValue = signal('');
-  final areaUnit = signal('sqft');
-  final bedrooms = signal('3');
-  final bathrooms = signal('2');
-  final furnishing = signal<String?>('semi_furnished');
-  final societyName = signal('');
-  final rentPeriod = signal('monthly');
-  final hasSwimmingPool = signal(false);
-  final hasGym = signal(false);
-  final hasGarden = signal(false);
-  final hasElevator = signal(false);
-  final isGatedCommunity = signal(false);
-  final parkingSpaces = signal('1');
-  final propertyCatalog = signal<PropertyCatalog?>(null);
-
-  // Vehicles
-  final vehicleType = signal('car');
-  final makes = signal<List<NamedOption>>([]);
-  final models = signal<List<NamedOption>>([]);
-  final makeId = signal<int?>(null);
-  final modelId = signal<int?>(null);
-  final year = signal('${DateTime.now().year - 2}');
-  final mileage = signal('');
-  final fuelType = signal('petrol');
-  final transmission = signal('automatic');
-  final bodyType = signal('sedan');
-  final colorExterior = signal('');
-  final financeAvailable = signal(false);
-  final vehicleCatalog = signal<VehicleCatalog?>(null);
 
   int get stepIndex => PostStep.values.indexOf(step.value);
   int get totalSteps => PostStep.values.length;
@@ -254,10 +214,7 @@ class PostListingStore {
 
   Future<void> bootstrap() async {
     await _restoreLocalDraft();
-    await Future.wait([loadCategories(), loadBusinesses(), loadGoldCatalog(), loadPropertyCatalog(), loadVehicleCatalog()]);
-    if (marketplaceCode.value == 'vehicles') {
-      await loadMakes();
-    }
+    await Future.wait([loadCategories(), loadBusinesses(), loadGoldCatalog()]);
     _hydrating = false;
   }
 
@@ -281,49 +238,10 @@ class PostListingStore {
     marketplaceCode.value = code;
     selectedCategoryId.value = null;
     selectedCategoryLabel.value = null;
-    if (code == 'property' &&
-        !['sell', 'rent', 'buy'].contains(operation.value)) {
-      operation.value = 'sell';
-    }
-    if (code == 'gold' && operation.value == 'rent') {
-      operation.value = 'sell';
-    }
-    if (code == 'vehicles') {
-      await loadMakes();
-      await loadVehicleCatalog();
-    }
     if (code == 'gold') {
       await loadGoldCatalog();
     }
-    if (code == 'property') {
-      await loadPropertyCatalog();
-    }
     await loadCategories();
-  }
-
-  Future<void> loadPropertyCatalog() async {
-    final repo = property;
-    if (repo == null) return;
-    final result = await repo.catalog();
-    result.when(
-      success: (catalog) {
-        propertyCatalog.value = catalog;
-        final allowed = catalog.typesForOperation(operation.value);
-        if (allowed.isNotEmpty &&
-            !allowed.any((t) => t.code == propertyKind.value)) {
-          propertyKind.value = allowed.first.code;
-        }
-        if (catalog.areaUnits.isNotEmpty &&
-            !catalog.areaUnits.any((u) => u.code == areaUnit.value)) {
-          areaUnit.value = catalog.areaUnits.first.code;
-        }
-        if (catalog.rentalDurations.isNotEmpty &&
-            !catalog.rentalDurations.any((d) => d.code == rentPeriod.value)) {
-          rentPeriod.value = catalog.rentalDurations.first.code;
-        }
-      },
-      failure: (_, _) {},
-    );
   }
 
   Future<void> loadGoldCatalog() async {
@@ -345,11 +263,7 @@ class PostListingStore {
 
   Future<void> loadCategories() async {
     categories.value = const AsyncLoading();
-    final id = switch (marketplaceCode.value) {
-      'property' => 2,
-      'vehicles' => 3,
-      _ => 1,
-    };
+    const id = 1; // Gold marketplace id.
     final result = await catalog.categories(id);
     result.when(
       success: (tree) {
@@ -358,57 +272,6 @@ class PostListingStore {
       },
       failure: (m, code) => categories.value = AsyncError(m, code: code),
     );
-  }
-
-  Future<void> loadVehicleCatalog() async {
-    try {
-      final catalog = await vehiclesApi.catalog();
-      vehicleCatalog.value = catalog;
-      final allowed = catalog.typesForOperation(operation.value);
-      if (allowed.isNotEmpty &&
-          !allowed.any((t) => t.code == vehicleType.value)) {
-        vehicleType.value = allowed.first.code;
-      }
-      if (catalog.fuels.isNotEmpty &&
-          !catalog.fuels.any((f) => f.code == fuelType.value)) {
-        fuelType.value = catalog.fuels.first.code;
-      }
-      if (catalog.transmissions.isNotEmpty &&
-          !catalog.transmissions.any((t) => t.code == transmission.value)) {
-        transmission.value = catalog.transmissions.first.code;
-      }
-      if (catalog.rentalDurations.isNotEmpty &&
-          !catalog.rentalDurations.any((d) => d.code == rentPeriod.value)) {
-        rentPeriod.value = catalog.rentalDurations.first.code;
-      }
-    } catch (_) {}
-  }
-
-  Future<void> loadMakes() async {
-    try {
-      makes.value = await vehiclesApi.makes(
-        vehicleType: vehicleType.value,
-        popular: true,
-      );
-      if (makes.value.isEmpty) {
-        makes.value = await vehiclesApi.makes(vehicleType: vehicleType.value);
-      }
-    } catch (_) {
-      makes.value = [];
-    }
-  }
-
-  Future<void> loadModels(int make) async {
-    makeId.value = make;
-    modelId.value = null;
-    try {
-      models.value = await vehiclesApi.models(
-        make,
-        vehicleType: vehicleType.value,
-      );
-    } catch (_) {
-      models.value = [];
-    }
   }
 
   String? validateCurrentStep() {
@@ -449,29 +312,6 @@ class PostListingStore {
         }
         if (karat.value.isEmpty && !isInvestmentGrade.value) {
           return 'Select karat / purity';
-        }
-        return null;
-      case 'property':
-        if (double.tryParse(areaValue.value.trim()) == null) {
-          return 'Enter property area';
-        }
-        if (operation.value == 'rent' && rentPeriod.value.isEmpty) {
-          return 'Select rent period';
-        }
-        return null;
-      case 'vehicles':
-        final rule = vehicleCatalog.value?.typeFor(vehicleType.value);
-        if (rule?.requiresMakeModel ?? true) {
-          if (makeId.value == null) return 'Select make';
-          if (modelId.value == null) return 'Select model';
-          if (int.tryParse(year.value.trim()) == null) return 'Enter model year';
-        }
-        if (rule?.requiresMileage ?? true) {
-          if (int.tryParse(mileage.value.trim()) == null) {
-            return rule?.usesEngineHours == true
-                ? 'Enter engine hours'
-                : 'Enter mileage';
-          }
         }
         return null;
       default:
@@ -571,70 +411,12 @@ class PostListingStore {
           if (makingCharges.value.trim().isNotEmpty)
             'makingChargeType': makingChargeType.value,
         };
-      case 'property':
-        return {
-          'propertyKind': propertyKind.value,
-          'areaValue': double.tryParse(areaValue.value.trim()),
-          'areaUnit': areaUnit.value,
-          if (bedrooms.value.trim().isNotEmpty)
-            'bedrooms': int.tryParse(bedrooms.value.trim()),
-          if (bathrooms.value.trim().isNotEmpty)
-            'bathrooms': int.tryParse(bathrooms.value.trim()),
-          if (furnishing.value != null) 'furnishing': furnishing.value,
-          if (societyName.value.trim().isNotEmpty)
-            'societyName': societyName.value.trim(),
-          if (operation.value == 'rent') 'rentPeriod': rentPeriod.value,
-          'hasSwimmingPool': hasSwimmingPool.value,
-          'hasGym': hasGym.value,
-          'hasGarden': hasGarden.value,
-          'hasElevator': hasElevator.value,
-          'isGatedCommunity': isGatedCommunity.value,
-          if (parkingSpaces.value.trim().isNotEmpty)
-            'parkingSpaces': int.tryParse(parkingSpaces.value.trim()),
-          'parkingAvailable':
-              (int.tryParse(parkingSpaces.value.trim()) ?? 0) > 0,
-        };
-      case 'vehicles':
-        final makeMatch =
-            makes.value.where((m) => m.intId == makeId.value).toList();
-        final modelMatch =
-            models.value.where((m) => m.intId == modelId.value).toList();
-        final makeName = makeMatch.isEmpty ? null : makeMatch.first.name;
-        final modelName = modelMatch.isEmpty ? null : modelMatch.first.name;
-        return {
-          'vehicleType': vehicleType.value,
-          'makeId': makeId.value,
-          'modelId': modelId.value,
-          'makeName': ?makeName,
-          'modelName': ?modelName,
-          'year': int.tryParse(year.value.trim()),
-          'mileage': int.tryParse(mileage.value.trim()),
-          'mileageUnit': 'km',
-          'fuelType': fuelType.value,
-          'transmission': transmission.value,
-          'bodyType': bodyType.value,
-          if (colorExterior.value.trim().isNotEmpty)
-            'colorExterior': colorExterior.value.trim(),
-          'financeAvailable': financeAvailable.value,
-          'ownersCount': 1,
-          'accidentHistory': 'none',
-        };
       default:
         return {};
     }
   }
 
-  String get _pricePeriod {
-    if (marketplaceCode.value == 'property' && operation.value == 'rent') {
-      return switch (rentPeriod.value) {
-        'weekly' => 'per_week',
-        'daily' => 'per_day',
-        'yearly' => 'per_year',
-        _ => 'per_month',
-      };
-    }
-    return 'total';
-  }
+  String get _pricePeriod => 'total';
 
   Future<Result<CreateListingResult>> publish() async {
     error.value = null;

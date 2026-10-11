@@ -125,7 +125,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTagline.
   ///
   /// In en, this message translates to:
-  /// **'Gold · Property · Vehicles'**
+  /// **'Gold Marketplace'**
   String get appTagline;
 
   /// No description provided for @splashHeadline.
@@ -137,7 +137,7 @@ abstract class AppLocalizations {
   /// No description provided for @splashSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'One account. Three marketplaces. Refined for global trade.'**
+  /// **'Buy, sell and auction gold with confidence.'**
   String get splashSubtitle;
 
   /// No description provided for @getStarted.

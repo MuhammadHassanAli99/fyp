@@ -16,6 +16,10 @@ class CatalogRepository {
   List<MarketplaceModel>? _cached;
   bool get hasCachedMarketplaces => _cached != null && _cached!.isNotEmpty;
 
+  /// Synchronous access to the last-known marketplace list, if any. Used by
+  /// the router to auto-select a sole marketplace without awaiting network.
+  List<MarketplaceModel>? get cachedMarketplaces => _cached;
+
   Future<Result<List<MarketplaceModel>>> marketplaces() async {
     if (_cached != null) return Success(_cached!);
     try {
@@ -60,20 +64,6 @@ class CatalogRepository {
         name: 'Gold',
         description: 'Bars, coins, jewelry & investment gold',
         operations: ['buy', 'sell', 'auction'],
-      ),
-      MarketplaceModel(
-        id: 2,
-        code: 'property',
-        name: 'Property',
-        description: 'Homes, land, offices & rentals',
-        operations: ['buy', 'sell', 'rent'],
-      ),
-      MarketplaceModel(
-        id: 3,
-        code: 'vehicles',
-        name: 'Vehicles',
-        description: 'Cars, bikes, trucks & import/export',
-        operations: ['buy', 'sell', 'rent'],
       ),
     ];
     return Success(_cached!);

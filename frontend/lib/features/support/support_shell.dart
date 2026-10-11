@@ -152,7 +152,7 @@ class _HomeTab extends StatelessWidget {
         children: [
           Text('One support platform', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
-          const Text('Gold, Property, Vehicles, payments, KYC and accounts share the same tickets, agents and knowledge base.'),
+          const Text('Gold marketplace, payments, KYC and accounts share the same tickets, agents and knowledge base.'),
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,

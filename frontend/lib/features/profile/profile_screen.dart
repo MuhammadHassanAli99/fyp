@@ -189,7 +189,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       icon: Icons.view_list_outlined,
                       title: l10n.myAds,
                       subtitle:
-                          'View and manage all your gold, property & vehicle ads',
+                          'View and manage all your gold ads',
                       onTap: () => context.push(AppRoutes.seller),
                     ),
                   ],

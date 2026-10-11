@@ -142,8 +142,6 @@ class _FilterBar extends StatelessWidget {
           for (final op in [
             (null, 'All markets'),
             ('gold', 'Gold'),
-            ('property', 'Property'),
-            ('vehicles', 'Vehicles'),
           ])
             ChoiceChip(
               label: Text(op.$2),

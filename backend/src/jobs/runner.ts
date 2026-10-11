@@ -4,8 +4,6 @@ import { env } from '../config/env';
 import { fxDriver } from '../providers/fx';
 import { upsertRates } from '../modules/locale/fx.service';
 import { generateGoldForecasts, protectGoldCertificateDocuments, syncGoldRates, tickGoldAuctions } from '../marketplaces/gold/gold.jobs';
-import { advanceLeaseSchedules, rollupPropertyAnalytics, runPropertyMaintenance } from '../marketplaces/property/property.jobs';
-import { rollupVehicleAnalytics, runVehicleMaintenance, trackVehicleShipments } from '../marketplaces/vehicles/vehicles.jobs';
 import {
   matchSavedSearches,
   processOutbox as processListingOutbox,
@@ -78,12 +76,6 @@ export function startScheduler(): void {
   timers.push(setInterval(() => void runGoldForecasts(), 6 * 60 * 60 * 1000));
   timers.push(setInterval(() => void runGoldAuctions(), 30_000));
   timers.push(setInterval(() => void runGoldDocumentProtect(), 60 * 60 * 1000));
-  timers.push(setInterval(() => void runPropertyJobs(), 15 * 60 * 1000));
-  timers.push(setInterval(() => void runPropertyAnalytics(), 6 * 60 * 60 * 1000));
-  timers.push(setInterval(() => void runPropertyLeases(), 60 * 60 * 1000));
-  timers.push(setInterval(() => void runVehicleJobs(), 15 * 60 * 1000));
-  timers.push(setInterval(() => void runVehicleAnalytics(), 6 * 60 * 60 * 1000));
-  timers.push(setInterval(() => void runVehicleShipments(), 15 * 60 * 1000));
   timers.push(setInterval(() => void runCallTimeouts(), 15_000));
   timers.push(setInterval(() => void runMaskedExpiry(), 5 * 60 * 1000));
   timers.push(setInterval(() => void runNotificationJobs(), 5_000));
@@ -104,8 +96,6 @@ export function startScheduler(): void {
   timers.push(setInterval(() => void runSupportMaintenanceJob(), 60 * 60 * 1000));
   void runGoldRates();
   void runGoldAuctions();
-  void runPropertyJobs();
-  void runVehicleJobs();
   void runQueuedAiJobs();
   void runRiskJobs();
   void runReviewMaintenance();
@@ -342,82 +332,6 @@ async function runGoldDocumentProtect(): Promise<void> {
   } catch (error) {
     log.warn({ err: error }, 'gold certificate document protect failed');
     await recordJobRun('gold.documents.protect', 'failed', Date.now() - startedAt, 0, String(error));
-  }
-}
-
-async function runPropertyJobs(): Promise<void> {
-  const startedAt = Date.now();
-  try {
-    const result = await runPropertyMaintenance();
-    await recordJobRun(
-      'property.maintenance',
-      'success',
-      Date.now() - startedAt,
-      result.documents + result.offers + result.leases + result.bookings + result.rentReminders,
-    );
-  } catch (error) {
-    log.warn({ err: error }, 'property maintenance failed');
-    await recordJobRun('property.maintenance', 'failed', Date.now() - startedAt, 0, String(error));
-  }
-}
-
-async function runPropertyAnalytics(): Promise<void> {
-  const startedAt = Date.now();
-  try {
-    const processed = await rollupPropertyAnalytics();
-    await recordJobRun('property.analytics.rollup', 'success', Date.now() - startedAt, processed);
-  } catch (error) {
-    log.warn({ err: error }, 'property analytics rollup failed');
-    await recordJobRun('property.analytics.rollup', 'failed', Date.now() - startedAt, 0, String(error));
-  }
-}
-
-async function runPropertyLeases(): Promise<void> {
-  const startedAt = Date.now();
-  try {
-    const processed = await advanceLeaseSchedules();
-    await recordJobRun('property.leases.advance', 'success', Date.now() - startedAt, processed);
-  } catch (error) {
-    log.warn({ err: error }, 'property lease schedule failed');
-    await recordJobRun('property.leases.advance', 'failed', Date.now() - startedAt, 0, String(error));
-  }
-}
-
-async function runVehicleJobs(): Promise<void> {
-  const startedAt = Date.now();
-  try {
-    const result = await runVehicleMaintenance();
-    await recordJobRun(
-      'vehicle.maintenance',
-      'success',
-      Date.now() - startedAt,
-      result.documents + result.offers + result.bookings + result.reminders,
-    );
-  } catch (error) {
-    log.warn({ err: error }, 'vehicle maintenance failed');
-    await recordJobRun('vehicle.maintenance', 'failed', Date.now() - startedAt, 0, String(error));
-  }
-}
-
-async function runVehicleAnalytics(): Promise<void> {
-  const startedAt = Date.now();
-  try {
-    const processed = await rollupVehicleAnalytics();
-    await recordJobRun('vehicle.analytics.rollup', 'success', Date.now() - startedAt, processed);
-  } catch (error) {
-    log.warn({ err: error }, 'vehicle analytics rollup failed');
-    await recordJobRun('vehicle.analytics.rollup', 'failed', Date.now() - startedAt, 0, String(error));
-  }
-}
-
-async function runVehicleShipments(): Promise<void> {
-  const startedAt = Date.now();
-  try {
-    const processed = await trackVehicleShipments();
-    await recordJobRun('vehicle.shipments.poll', 'success', Date.now() - startedAt, processed);
-  } catch (error) {
-    log.warn({ err: error }, 'vehicle shipment poll failed');
-    await recordJobRun('vehicle.shipments.poll', 'failed', Date.now() - startedAt, 0, String(error));
   }
 }
 

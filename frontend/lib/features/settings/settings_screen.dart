@@ -278,14 +278,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => context.push(AppRoutes.privacyCenter),
               ),
               ListTile(
-                leading: const Icon(Icons.swap_horiz),
-                title: Text(l10n.switchMarketplace),
-                onTap: () {
-                  ServiceLocator.instance.compareStore.clear();
-                  context.go(AppRoutes.marketplaceSelect);
-                },
-              ),
-              ListTile(
                 leading: const Icon(Icons.gavel_outlined),
                 title: Text(l10n.legalDocuments),
                 subtitle: const Text('Terms, privacy, seller and marketplace policies'),

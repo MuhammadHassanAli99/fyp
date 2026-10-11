@@ -12,14 +12,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appName => 'AURELIA';
 
   @override
-  String get appTagline => 'Gold · Property · Vehicles';
+  String get appTagline => 'Gold Marketplace';
 
   @override
   String get splashHeadline => 'Discover premium listings worldwide';
 
   @override
   String get splashSubtitle =>
-      'One account. Three marketplaces. Refined for global trade.';
+      'Buy, sell and auction gold with confidence.';
 
   @override
   String get getStarted => 'Get Started';

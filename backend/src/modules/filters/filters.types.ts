@@ -24,7 +24,7 @@ export const FILTER_TYPES = [
 
 export type FilterType = (typeof FILTER_TYPES)[number];
 
-export const FILTER_MARKETPLACES = ['gold', 'property', 'vehicles', 'parts'] as const;
+export const FILTER_MARKETPLACES = ['gold'] as const;
 export type FilterMarketplace = (typeof FILTER_MARKETPLACES)[number];
 
 export const RADIUS_PRESETS_KM = [1, 5, 10, 25, 50, 100] as const;
@@ -66,7 +66,7 @@ export type FilterValue =
   | null;
 
 export interface FilterState {
-  marketplace: FilterMarketplace | 'gold' | 'property' | 'vehicles' | null;
+  marketplace: FilterMarketplace | null;
   category: string | null;
   subcategory: string | null;
   operation: string | null;

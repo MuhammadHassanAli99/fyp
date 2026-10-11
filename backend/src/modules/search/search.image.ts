@@ -4,7 +4,7 @@ import { env } from '../../config/env';
 import { loggerFor } from '../../config/logger';
 import { orchestrate } from '../ai/ai.orchestrator';
 import { throughGateway } from '../ai/ai.gateway';
-import { detectMarketplaces, firstMatchingRule, GOLD_FORMS, PROPERTY_KINDS, VEHICLE_TYPES } from './search.taxonomy';
+import { detectMarketplaces, firstMatchingRule, GOLD_FORMS } from './search.taxonomy';
 import { emptySearchQuery, type SearchQuery } from './search.dsl';
 
 const log = loggerFor('search.image');
@@ -44,7 +44,7 @@ async function visionLabels(imageUrl: string): Promise<string[]> {
             content: [
               {
                 type: 'text',
-                text: 'Describe this marketplace listing photo as JSON {"labels":[string],"marketplace":"gold"|"property"|"vehicles"|null,"attributes":{}}. No authenticity claims.',
+                text: 'Describe this marketplace listing photo as JSON {"labels":[string],"marketplace":"gold"|null,"attributes":{}}. No authenticity claims.',
               },
               { type: 'image_url', image_url: { url: imageUrl } },
             ],
@@ -83,16 +83,6 @@ function dslFromLabels(labels: string[], imageUrl: string): SearchQuery {
     if (goldForm === 'ring' || goldForm === 'necklace' || goldForm === 'bangle' || goldForm === 'earring') {
       query.filters.jewelleryType = goldForm;
     }
-  }
-  const propertyKind = firstMatchingRule(blob, PROPERTY_KINDS);
-  if (propertyKind) {
-    query.marketplace = 'property';
-    query.filters.propertyKind = propertyKind;
-  }
-  const vehicleType = firstMatchingRule(blob, VEHICLE_TYPES);
-  if (vehicleType) {
-    query.marketplace = 'vehicles';
-    query.filters.vehicleType = vehicleType;
   }
   return query;
 }

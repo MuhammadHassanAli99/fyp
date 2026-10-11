@@ -24,7 +24,7 @@ export const TOOL_REGISTRY: Record<string, ToolDefinition> = {
     audit: true,
     input: z.object({
       query: z.string().trim().min(1).max(200),
-      marketplace: z.enum(['gold', 'property', 'vehicles']).optional(),
+      marketplace: z.enum(['gold']).optional(),
     }),
   },
   GetListing: {
@@ -70,22 +70,6 @@ export const TOOL_REGISTRY: Record<string, ToolDefinition> = {
   SearchGold: {
     name: 'SearchGold',
     description: 'Search gold listings',
-    permission: 'public',
-    rateLimit: 30,
-    audit: true,
-    input: z.object({ query: z.string().trim().min(1).max(200) }),
-  },
-  SearchProperty: {
-    name: 'SearchProperty',
-    description: 'Search property listings',
-    permission: 'public',
-    rateLimit: 30,
-    audit: true,
-    input: z.object({ query: z.string().trim().min(1).max(200) }),
-  },
-  SearchVehicle: {
-    name: 'SearchVehicle',
-    description: 'Search vehicle listings',
     permission: 'public',
     rateLimit: 30,
     audit: true,
@@ -165,10 +149,6 @@ export async function executeApprovedTool(params: {
       return searchPublished((parsed as { query: string }).query, (parsed as { marketplace?: string }).marketplace);
     case 'SearchGold':
       return searchPublished((parsed as { query: string }).query, 'gold');
-    case 'SearchProperty':
-      return searchPublished((parsed as { query: string }).query, 'property');
-    case 'SearchVehicle':
-      return searchPublished((parsed as { query: string }).query, 'vehicles');
     case 'GetListing':
     case 'CheckListingStatus': {
       const listing = await getListing({

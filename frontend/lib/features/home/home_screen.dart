@@ -39,8 +39,6 @@ class _HomeScreenState extends State<HomeScreen> {
       sl.listingsRepository,
       sl.settingsRepository,
       gold: sl.goldRepository,
-      property: sl.propertyRepository,
-      vehicles: sl.vehicleRepository,
       ai: sl.authRepository.isGuest ? null : sl.aiRepository,
     );
     _compareStore = sl.compareStore;
@@ -55,8 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String get _marketplaceTitle {
     return switch (_store.marketplace) {
-      'property' => 'Property',
-      'vehicles' => 'Vehicles',
       'gold' => 'Gold',
       _ => context.l10n.appName,
     };
@@ -64,8 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String get _searchHint {
     return switch (_store.marketplace) {
-      'property' => 'Search city, society, or keyword…',
-      'vehicles' => 'Search make, model, or city…',
       'gold' => 'Search 22k gold ring, bars, coins…',
       _ => context.l10n.searchHint,
     };
@@ -108,49 +102,14 @@ class _HomeScreenState extends State<HomeScreen> {
         title: _marketplaceTitle,
         actions: [
           IconButton(
-            icon: const Icon(Icons.grid_view_outlined),
-            tooltip: l10n.switchMarketplace,
-            onPressed: () => context.go(AppRoutes.marketplaceSelect),
-          ),
-          IconButton(
             icon: const Icon(Icons.compare_arrows),
             onPressed: () => context.push(AppRoutes.compare),
           ),
-          if (marketplace == 'gold')
-            IconButton(
-              icon: const Icon(Icons.map_outlined),
-              tooltip: 'Map',
-              onPressed: () => context.push('${AppRoutes.map}?marketplace=gold'),
-            ),
-          if (marketplace == 'property') ...[
-            IconButton(
-              icon: const Icon(Icons.map_outlined),
-              tooltip: 'Map',
-              onPressed: () => context.push(AppRoutes.propertyMap),
-            ),
-            IconButton(
-              icon: const Icon(Icons.notifications_active_outlined),
-              tooltip: 'Saved searches',
-              onPressed: () => context.push(AppRoutes.propertySavedSearches),
-            ),
-          ],
-          if (marketplace == 'vehicles') ...[
-            IconButton(
-              icon: const Icon(Icons.map_outlined),
-              tooltip: 'Map',
-              onPressed: () => context.push(AppRoutes.vehicleMap),
-            ),
-            IconButton(
-              icon: const Icon(Icons.notifications_active_outlined),
-              tooltip: 'Saved searches',
-              onPressed: () => context.push(AppRoutes.vehicleSavedSearches),
-            ),
-            IconButton(
-              icon: const Icon(Icons.settings_input_component_outlined),
-              tooltip: 'Parts',
-              onPressed: () => context.push(AppRoutes.vehicleParts),
-            ),
-          ],
+          IconButton(
+            icon: const Icon(Icons.map_outlined),
+            tooltip: 'Map',
+            onPressed: () => context.push('${AppRoutes.map}?marketplace=gold'),
+          ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () => context.push(AppRoutes.settings),
@@ -212,31 +171,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                   }),
-                  if (marketplace == 'property')
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      icon: const Icon(Icons.bookmark_add_outlined),
-                      tooltip: 'Save search',
-                      onPressed: () async {
-                        if (ServiceLocator.instance.authRepository.isGuest) {
-                          context.push(AppRoutes.login);
-                          return;
-                        }
-                        await _store.saveCurrentSearch(
-                          _store.query.q?.isNotEmpty == true
-                              ? _store.query.q!
-                              : 'Property search',
-                        );
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Search saved. You will be notified when matching properties are published.',
-                            ),
-                          ),
-                        );
-                      },
-                    ),
                   IconButton(
                     visualDensity: VisualDensity.compact,
                     icon: const Icon(Icons.sort),
@@ -266,7 +200,6 @@ class _HomeScreenState extends State<HomeScreen> {
             }),
             SignalBuilder(builder: (context) {
               _store.filterTick.value;
-              _store.vehicleCatalog.value;
               final selectedOp = _store.query.operation;
               return SizedBox(
                 height: 44,
@@ -301,86 +234,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             onSelected: (s) {
                               final next = _store.query.copy();
                               next.karat = s ? k.$1 : null;
-                              _store.applyFilters(next);
-                            },
-                          ),
-                        ),
-                    ],
-                    if (marketplace == 'property') ...[
-                      for (final op in [
-                        (null, 'All'),
-                        ('sell', 'For sale'),
-                        ('rent', 'Rent'),
-                        ('buy', 'Wanted'),
-                      ])
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text(op.$2),
-                            selected: selectedOp == op.$1,
-                            onSelected: (_) => _store.setOperation(op.$1),
-                            selectedColor:
-                                AppColors.gold.withValues(alpha: 0.25),
-                          ),
-                        ),
-                      const SizedBox(width: 8),
-                      for (final beds in [1, 2, 3, 4])
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: FilterChip(
-                            label: Text('$beds+ Beds'),
-                            selected: _store.query.bedroomsMin == beds,
-                            onSelected: (s) {
-                              final next = _store.query.copy();
-                              next.bedroomsMin = s ? beds : null;
-                              _store.applyFilters(next);
-                            },
-                          ),
-                        ),
-                    ],
-                    if (marketplace == 'vehicles') ...[
-                      for (final op in [
-                        (null, 'All'),
-                        ('sell', 'For sale'),
-                        ('rent', 'Rent'),
-                        ('buy', 'Wanted'),
-                        ('auction', 'Auction'),
-                      ])
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text(op.$2),
-                            selected: selectedOp == op.$1,
-                            onSelected: (_) => _store.setOperation(op.$1),
-                            selectedColor:
-                                AppColors.gold.withValues(alpha: 0.25),
-                          ),
-                        ),
-                      const SizedBox(width: 8),
-                      for (final t in (_store.vehicleCatalog.value?.types
-                                  .map((e) => e.code)
-                                  .toList() ??
-                              const [
-                                'car',
-                                'motorcycle',
-                                'van',
-                                'truck',
-                                'bus',
-                                'taxi',
-                                'rickshaw',
-                                'boat',
-                              ])
-                          .take(12))
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: FilterChip(
-                            label: Text(t.replaceAll('_', ' ')),
-                            selected: _store.query.vehicleType == t,
-                            onSelected: (s) {
-                              final next = _store.query.copy();
-                              next.vehicleType = s ? t : null;
-                              next.makeId = null;
-                              next.modelId = null;
                               _store.applyFilters(next);
                             },
                           ),
@@ -454,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     title: l10n.noListings,
                     subtitle: hasFilters
                         ? l10n.noListingsHint
-                        : 'No published listings yet. Check back soon or switch marketplace.',
+                        : 'No published listings yet. Check back soon.',
                     action: hasFilters
                         ? TextButton(
                             onPressed: _store.clearFilters,
@@ -495,9 +348,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     listing.id,
                                     listing: listing,
                                   );
-                                  final count = _compareStore.isVehicles
-                                      ? _compareStore.filledSlotCount
-                                      : _compareStore.listingIds.value.length;
+                                  final count =
+                                      _compareStore.listingIds.value.length;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(

@@ -426,7 +426,7 @@ class _SearchScreenState extends State<SearchScreen> {
               focusNode: _focus,
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
-                hintText: 'Search gold, property, vehicles…',
+                hintText: 'Search gold bars, coins, jewelry…',
                 isDense: context.isCompact,
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: Row(
@@ -739,8 +739,8 @@ class _DiscoveryPanel extends StatelessWidget {
           ],
           if (recent.isEmpty && trending.isEmpty && saved.isEmpty)
             const EmptyState(
-              title: 'Search across Gold, Property, and Vehicles',
-              subtitle: 'Try “automatic Toyota under 50 lakh near Islamabad” or “24k gold 10 gram”.',
+              title: 'Search the Gold marketplace',
+              subtitle: 'Try “24k gold 10 gram” or “22k gold ring under 50000”.',
             ),
         ],
       );

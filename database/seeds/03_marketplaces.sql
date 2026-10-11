@@ -14,11 +14,19 @@ SET NAMES utf8mb4;
 -- -----------------------------------------------------------------------------
 -- 1. The three marketplaces (§4). `config` is read by the backend
 --    MarketplaceModule, so module behaviour is data rather than a code branch.
+--
+--    The API is Gold-only: Property and Vehicles modules were removed from
+--    the backend (`backend/src/marketplaces/{property,vehicles}`), so their
+--    rows stay here (categories/translations/sort options below reference
+--    them by id) but are seeded `is_active = FALSE` / `is_coming_soon = FALSE`
+--    so new databases never expose them. See also
+--    database/migrations/039_deactivate_property_vehicles.sql for existing
+--    databases.
 -- -----------------------------------------------------------------------------
 INSERT INTO marketplaces (id, code, name, tagline, icon, color, operations, detail_table, config, is_active, is_coming_soon, sort_order) VALUES
-  (1, 'gold',     'Gold',     'Buy, sell and auction gold with confidence', 'gem',        '#D4AF37', '["buy","sell","auction"]', 'gold_listing_details',    '{"allowsAuction":true,"requiresCertificate":false,"liveRates":true,"authenticityCheck":true,"pricePrediction":true,"weightUnits":["gram","tola","troy_ounce"]}', TRUE, FALSE, 1),
-  (2, 'property', 'Property', 'Find your next home, office or plot',        'building-2', '#0EA5E9', '["buy","sell","rent"]',    'property_listing_details','{"requiresDocuments":true,"allowsViewings":true,"valuation":true,"comparison":true,"maxCompareItems":4,"areaUnits":["sqft","sqm","marla","kanal"]}',            TRUE, FALSE, 2),
-  (3, 'vehicles', 'Vehicles', 'Compare and buy your next vehicle',          'car-front',  '#7C3AED', '["buy","sell","rent"]',    'vehicle_listing_details', '{"requiresInspection":false,"comparison":true,"priceEstimate":true,"maxCompareItems":4,"aiCompareMin":3,"importExport":true}',                                 TRUE, FALSE, 3)
+  (1, 'gold',     'Gold',     'Buy, sell and auction gold with confidence', 'gem',        '#D4AF37', '["buy","sell","auction"]', 'gold_listing_details',    '{"allowsAuction":true,"requiresCertificate":false,"liveRates":true,"authenticityCheck":true,"pricePrediction":true,"weightUnits":["gram","tola","troy_ounce"]}', TRUE,  FALSE, 1),
+  (2, 'property', 'Property', 'Find your next home, office or plot',        'building-2', '#0EA5E9', '["buy","sell","rent"]',    'property_listing_details','{"requiresDocuments":true,"allowsViewings":true,"valuation":true,"comparison":true,"maxCompareItems":4,"areaUnits":["sqft","sqm","marla","kanal"]}',            FALSE, FALSE, 2),
+  (3, 'vehicles', 'Vehicles', 'Compare and buy your next vehicle',          'car-front',  '#7C3AED', '["buy","sell","rent"]',    'vehicle_listing_details', '{"requiresInspection":false,"comparison":true,"priceEstimate":true,"maxCompareItems":4,"aiCompareMin":3,"importExport":true}',                                 FALSE, FALSE, 3)
 ON DUPLICATE KEY UPDATE
   code = VALUES(code), name = VALUES(name), tagline = VALUES(tagline), icon = VALUES(icon),
   color = VALUES(color), operations = VALUES(operations), detail_table = VALUES(detail_table),
@@ -26,18 +34,18 @@ ON DUPLICATE KEY UPDATE
   sort_order = VALUES(sort_order);
 
 -- -----------------------------------------------------------------------------
--- 2. Per-country availability. All three modules are live in the six launch
---    markets; gold and vehicles are globally tradeable, property is opened
---    market by market because it needs local document rules.
+-- 2. Per-country availability. Only Gold (id 1) is seeded active; Property and
+--    Vehicles rows are kept (FK target for historical/demo data) but inactive,
+--    matching the marketplace-level deactivation above.
 -- -----------------------------------------------------------------------------
 INSERT INTO marketplace_countries (marketplace_id, country_id, is_active, launched_at)
-SELECT m.id, c.id, TRUE, '2026-01-01 00:00:00'
+SELECT m.id, c.id, (m.id = 1), '2026-01-01 00:00:00'
 FROM marketplaces m CROSS JOIN countries c
 WHERE c.id BETWEEN 1 AND 6
 ON DUPLICATE KEY UPDATE is_active = VALUES(is_active), launched_at = VALUES(launched_at);
 
 INSERT INTO marketplace_countries (marketplace_id, country_id, is_active, launched_at)
-SELECT m.id, c.id, TRUE, '2026-01-01 00:00:00'
+SELECT m.id, c.id, (m.id = 1), '2026-01-01 00:00:00'
 FROM marketplaces m CROSS JOIN countries c
 WHERE m.id IN (1, 3) AND c.id > 6
 ON DUPLICATE KEY UPDATE is_active = VALUES(is_active), launched_at = VALUES(launched_at);

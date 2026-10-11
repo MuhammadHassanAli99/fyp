@@ -1,6 +1,5 @@
 import { queryRows, type Row } from '../../db/query';
 import { listRegions, listCities, listAreas } from '../geo/geo.service';
-import { listMakes, listModels, listVariants } from '../../marketplaces/vehicles/vehicles.service';
 import { listBrands } from '../catalog/catalog.service';
 import type { FilterLookupItem } from './filters.types';
 
@@ -55,25 +54,12 @@ export async function lookupFilterValues(params: {
       const rows = await listAreas(cityId, q);
       return named(rows);
     }
-    if (key === 'makeId') {
-      const vehicleType = params.parentKey === 'vehicleType' ? parent : null;
-      const rows = await listMakes({ vehicleType, popularOnly: false });
-      return named(rows).filter((item) => !q || item.label.toLowerCase().includes(q.toLowerCase()));
-    }
-    if (key === 'modelId' && parent) {
-      const makeId = Number(parent);
-      if (!Number.isFinite(makeId)) return [];
-      const rows = await listModels(makeId);
-      return named(rows).filter((item) => !q || item.label.toLowerCase().includes(q.toLowerCase()));
-    }
-    if (key === 'variantId' && parent) {
-      const modelId = Number(parent);
-      if (!Number.isFinite(modelId)) return [];
-      const rows = await listVariants(modelId);
-      return named(rows).filter((item) => !q || item.label.toLowerCase().includes(q.toLowerCase()));
-    }
+    // makeId / modelId / variantId / partCategory / partBrand lookups were
+    // removed with the Vehicles marketplace (and its vehicle-only Parts
+    // filters) — vehicles.service no longer exists.
     if (key === 'brandId') {
-      const marketplaceId = params.marketplace === 'gold' ? 1 : params.marketplace === 'property' ? 2 : 3;
+      const marketplaceId = params.marketplace === 'gold' ? 1 : null;
+      if (!marketplaceId) return [];
       const rows = await listBrands(marketplaceId);
       return rows
         .map((row) => ({
@@ -83,29 +69,8 @@ export async function lookupFilterValues(params: {
         .filter((item) => item.value && (!q || item.label.toLowerCase().includes(q.toLowerCase())))
         .slice(0, MAX_LOOKUP);
     }
-    if (key === 'partCategory') {
-      const rows = await queryRows<Row>(
-        `SELECT code, name FROM vehicle_part_categories WHERE is_active = 1 ORDER BY sort_order, name LIMIT ?`,
-        [MAX_LOOKUP],
-      ).catch(() => [] as Row[]);
-      return rows
-        .map((row) => ({ value: String(row.code), label: String(row.name ?? row.code) }))
-        .filter((item) => !q || item.label.toLowerCase().includes(q.toLowerCase()));
-    }
-    if (key === 'partBrand') {
-      const rows = await queryRows<Row>(
-        `SELECT DISTINCT brand AS name FROM vehicle_parts
-          WHERE deleted_at IS NULL AND brand IS NOT NULL AND brand <> ''
-          ${q ? 'AND brand LIKE ?' : ''}
-          ORDER BY brand LIMIT ?`,
-        q ? [`${q}%`, MAX_LOOKUP] : [MAX_LOOKUP],
-      ).catch(() => [] as Row[]);
-      return rows.map((row) => ({ value: String(row.name), label: String(row.name) }));
-    }
     if (key === 'category') {
-      const code = params.marketplace === 'gold' || params.marketplace === 'property' || params.marketplace === 'vehicles'
-        ? params.marketplace
-        : null;
+      const code = params.marketplace === 'gold' ? params.marketplace : null;
       if (!code) return [];
       const rows = await queryRows<Row>(
         `SELECT c.id, c.code, c.name FROM categories c

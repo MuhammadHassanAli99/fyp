@@ -139,8 +139,6 @@ class _MarketplaceCard extends StatelessWidget {
     final l10n = context.l10n;
     final (title, subtitle, icon) = switch (marketplace.code) {
       'gold' => (l10n.goldMarketplace, l10n.goldDescription, Icons.diamond_outlined),
-      'property' => (l10n.propertyMarketplace, l10n.propertyDescription, Icons.home_work_outlined),
-      'vehicles' => (l10n.vehiclesMarketplace, l10n.vehiclesDescription, Icons.directions_car_outlined),
       _ => (marketplace.name, marketplace.description ?? '', Icons.store_outlined),
     };
 

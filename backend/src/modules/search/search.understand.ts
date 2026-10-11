@@ -18,14 +18,8 @@ import {
   detectMarketplaces,
   firstMatchingRule,
   GOLD_FORMS,
-  looksLikePartsQuery,
   OPERATION_ALIASES,
   PREFERENCE_PATTERNS,
-  PROPERTY_KINDS,
-  SOFT_MODIFIERS,
-  VEHICLE_MAKES,
-  VEHICLE_MODELS,
-  VEHICLE_TYPES,
 } from './search.taxonomy';
 
 export interface UnderstandContext {
@@ -42,9 +36,6 @@ export interface UnderstoodSearch {
   confidence: number;
   usedAi: boolean;
 }
-
-const PROPERTY_NEEDS_OPERATION = /\b(house|home|flat|apartment|villa|plot|ghar|makan)\b/i;
-const HAS_OPERATION = /\b(rent|rental|kiraya|sale|sell|buy|wanted|auction|for sale|for rent)\b/i;
 
 function rewriteKeywords(text: string): string {
   return text
@@ -81,12 +72,6 @@ function understandSegment(raw: string, ctx: UnderstandContext, forcedMarketplac
   const detected = detectMarketplaces(text);
   if (!query.marketplace) {
     query.marketplace = detected[0] ?? null;
-  }
-
-  if (looksLikePartsQuery(text)) {
-    query.intent = 'parts';
-    query.marketplace = 'vehicles';
-    query.filters.partCategory = 'parts';
   }
 
   query.operation = extractOperation(text);
@@ -130,47 +115,6 @@ function understandSegment(raw: string, ctx: UnderstandContext, forcedMarketplac
     if (/\binvestment\b/i.test(text)) query.filters.investmentGrade = true;
   }
 
-  if (mp === 'property' || (!mp && detected.includes('property'))) {
-    query.marketplace = query.marketplace ?? 'property';
-    const kind = firstMatchingRule(text, PROPERTY_KINDS);
-    if (kind) query.filters.propertyKind = kind;
-    const beds = text.match(/(\d+)\s*(?:bed|beds|bedroom|bedrooms|br|bhk)\b/i);
-    if (beds) query.filters.bedroomsMin = Number(beds[1]);
-    const baths = text.match(/(\d+)\s*(?:bath|baths|bathroom|bathrooms)\b/i);
-    if (baths) query.filters.bathroomsMin = Number(baths[1]);
-    if (/\bfurnished\b/i.test(text)) query.filters.furnishing = 'furnished';
-    if (/\bparking\b/i.test(text)) query.filters.parkingMin = 1;
-    if (/\b(pool|swimming)\b/i.test(text)) query.filters.swimmingPool = true;
-    if (/\bgym\b/i.test(text)) query.filters.gym = true;
-    if (/\bgarden\b/i.test(text)) query.filters.garden = true;
-    if (/\bbalcony\b/i.test(text)) query.filters.balcony = true;
-  }
-
-  if (mp === 'vehicles' || (!mp && detected.includes('vehicles'))) {
-    query.marketplace = query.marketplace ?? 'vehicles';
-    const type = firstMatchingRule(text, VEHICLE_TYPES);
-    if (type) query.filters.vehicleType = type;
-    const make = firstMatchingRule(text, VEHICLE_MAKES);
-    if (make) query.filters.make = make;
-    const model = firstMatchingRule(text, VEHICLE_MODELS);
-    if (model) query.filters.model = model;
-    if (/\bautomatic\b/i.test(text)) query.filters.transmission = 'automatic';
-    else if (/\bmanual\b/i.test(text)) query.filters.transmission = 'manual';
-    else if (/\bcvt\b/i.test(text)) query.filters.transmission = 'cvt';
-    for (const fuel of ['petrol', 'diesel', 'hybrid', 'electric', 'cng', 'lpg']) {
-      if (new RegExp(`\\b${fuel}\\b`, 'i').test(text)) query.filters.fuelType = fuel;
-    }
-    const year = text.match(/\b(19[5-9]\d|20[0-3]\d)\b/);
-    if (year) {
-      query.filters.yearMin = Number(year[1]);
-      query.filters.yearMax = Number(year[1]) + 1;
-    }
-    const km = text.match(/(\d+)\s*(?:k\s*)?km/i);
-    if (km && !SOFT_MODIFIERS.test(text)) {
-      query.filters.mileageMax = Number(km[1]) * (/k\s*km/i.test(text) ? 1000 : 1);
-    }
-  }
-
   const inCity = text.match(/\b(?:in|near|mein|me|mai|فی)\s+([A-Za-z\u0600-\u06FF][A-Za-z\u0600-\u06FF\s]{1,40})$/i);
   if (inCity?.[1]) {
     query.location = { cityName: inCity[1].trim() };
@@ -187,27 +131,6 @@ function understandSegment(raw: string, ctx: UnderstandContext, forcedMarketplac
 
   query.keywords = rewriteKeywords(text);
   query.semanticQuery = text;
-
-  if (
-    (query.marketplace === 'property' || PROPERTY_NEEDS_OPERATION.test(text)) &&
-    !query.operation &&
-    !HAS_OPERATION.test(text) &&
-    !ctx.marketplaceCode
-  ) {
-    query.clarification = {
-      needed: true,
-      questions: ['Would you like to buy or rent?'],
-      missing: ['operation'],
-    };
-  }
-
-  if (ctx.marketplaceCode === 'property' && !query.operation && PROPERTY_NEEDS_OPERATION.test(text) && !HAS_OPERATION.test(text)) {
-    query.clarification = {
-      needed: true,
-      questions: ['Would you like to buy or rent?'],
-      missing: ['operation'],
-    };
-  }
 
   return query;
 }

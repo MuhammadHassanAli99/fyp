@@ -12,13 +12,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appName => 'AURELIA';
 
   @override
-  String get appTagline => 'ذهب · عقارات · مركبات';
+  String get appTagline => 'سوق الذهب';
 
   @override
   String get splashHeadline => 'اكتشف قوائم مميزة حول العالم';
 
   @override
-  String get splashSubtitle => 'حساب واحد. ثلاثة أسواق. مصمم للتجارة العالمية.';
+  String get splashSubtitle => 'اشترِ وبِع وزاود على الذهب بثقة.';
 
   @override
   String get getStarted => 'ابدأ';

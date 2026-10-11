@@ -60,8 +60,6 @@ export interface ListingMapMarker {
 
 function marketplaceId(code: string | null | undefined): number | null {
   if (code === 'gold') return 1;
-  if (code === 'property') return 2;
-  if (code === 'vehicles') return 3;
   return null;
 }
 
@@ -117,10 +115,7 @@ export async function searchMap(
   input: MapSearchInput,
   context: { currency: string; language: string; countryCode?: string; countryId: number | null },
 ) {
-  const marketplace =
-    input.marketplace === 'gold' || input.marketplace === 'property' || input.marketplace === 'vehicles'
-      ? input.marketplace
-      : null;
+  const marketplace = input.marketplace === 'gold' ? input.marketplace : null;
   const fromFilters = input.filters
     ? filterStateToSearchDsl(filterStateFromQueryParams(input.filters, { marketplace, currency: context.currency }), context)
     : null;

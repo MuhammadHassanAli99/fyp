@@ -25,8 +25,6 @@ class NotificationCenterStore {
     'all',
     'unread',
     'gold',
-    'property',
-    'vehicles',
     'messages',
     'security',
     'payments',

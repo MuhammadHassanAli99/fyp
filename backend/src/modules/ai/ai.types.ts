@@ -1,6 +1,6 @@
 /**
  * Central AI vocabulary. Capabilities are features behind one platform —
- * not GoldAI / PropertyAI / VehicleAI silos.
+ * not a per-marketplace AI silo.
  */
 
 export const AI_TASKS = [
@@ -13,8 +13,6 @@ export const AI_TASKS = [
   'fraud_detect',
   'price_recommend',
   'market_analysis',
-  'property_valuation',
-  'vehicle_estimate',
   'gold_trend',
   'translate',
   'smart_search',
@@ -49,8 +47,6 @@ export const ENTITLEMENT_BY_TASK: Partial<Record<AiTask, string>> = {
   image_enhance: 'enhance_image',
   smart_search: 'ai_search',
   price_recommend: 'ai_valuation',
-  property_valuation: 'ai_valuation',
-  vehicle_estimate: 'ai_valuation',
   gold_trend: 'ai_valuation',
   review_authenticity: 'ai_valuation',
   market_analysis: 'ai_analytics',
@@ -69,8 +65,6 @@ export const CAPABILITY_BY_TASK: Record<AiTask, AiCapabilityKind> = {
   fraud_detect: 'moderation',
   price_recommend: 'prediction',
   market_analysis: 'prediction',
-  property_valuation: 'prediction',
-  vehicle_estimate: 'prediction',
   gold_trend: 'prediction',
   translate: 'translation',
   smart_search: 'llm',

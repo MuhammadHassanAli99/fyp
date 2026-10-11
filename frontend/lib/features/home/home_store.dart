@@ -7,12 +7,9 @@ import '../../core/result/result.dart';
 import '../../data/models/gold_models.dart';
 import '../../data/models/listing_feed_query.dart';
 import '../../data/models/listing_model.dart';
-import '../../data/models/vehicle_models.dart';
 import '../../data/repositories/gold_repository.dart';
 import '../../data/repositories/listings_repository.dart';
-import '../../data/repositories/property_repository.dart';
 import '../../data/repositories/settings_repository.dart';
-import '../../data/repositories/vehicle_repository.dart';
 import '../../data/repositories/ai_repository.dart';
 
 class HomeStore {
@@ -20,8 +17,6 @@ class HomeStore {
     this._listings,
     this._settings, {
     this._gold,
-    this._property,
-    this._vehicles,
     this._ai,
   }) {
     query = ListingFeedQuery(marketplace: marketplace);
@@ -30,8 +25,6 @@ class HomeStore {
   final ListingsRepository _listings;
   final SettingsRepository _settings;
   final GoldRepository? _gold;
-  final PropertyRepository? _property;
-  final VehicleRepository? _vehicles;
   final AiRepository? _ai;
 
   late ListingFeedQuery query;
@@ -41,7 +34,6 @@ class HomeStore {
   final goldForecasts = signal<List<GoldForecast>>([]);
   final goldPurities = signal<List<GoldPurity>>([]);
   final goldRateDisclaimer = signal<String?>(null);
-  final vehicleCatalog = signal<VehicleCatalog?>(null);
   final recommended = signal<List<ListingModel>>([]);
   final recommendationNote = signal<String?>(null);
   final hasMore = signal(false);
@@ -94,9 +86,6 @@ class HomeStore {
     if (marketplace == 'gold') {
       await loadGoldMarket();
     }
-    if (marketplace == 'vehicles') {
-      await loadVehicleCatalog();
-    }
     await loadRecommendations();
   }
 
@@ -130,16 +119,6 @@ class HomeStore {
     load();
   }
 
-  Future<void> loadVehicleCatalog() async {
-    final vehicles = _vehicles;
-    if (vehicles == null) return;
-    final result = await vehicles.catalog();
-    result.when(
-      success: (catalog) => vehicleCatalog.value = catalog,
-      failure: (_, _) {},
-    );
-  }
-
   Future<void> loadRecommendations() async {
     final ai = _ai;
     if (ai == null) {
@@ -149,8 +128,6 @@ class HomeStore {
     }
     final marketplaceId = switch (marketplace) {
       'gold' => 1,
-      'property' => 2,
-      'vehicles' => 3,
       _ => null,
     };
     final result = await ai.recommendations(marketplaceId: marketplaceId);
@@ -178,66 +155,7 @@ class HomeStore {
     query.q = value.trim().isEmpty ? null : value.trim();
     query.page = 1;
     query.cursor = null;
-    if (marketplace == 'property' && query.q != null) {
-      _applyParsedPropertyQuery(query.q!);
-      return;
-    }
-    if (marketplace == 'vehicles' && query.q != null) {
-      _applyParsedVehicleQuery(query.q!);
-      return;
-    }
     load();
-  }
-
-  Future<void> _applyParsedPropertyQuery(String raw) async {
-    final property = _property;
-    if (property == null) {
-      load();
-      return;
-    }
-    final parsed = await property.parseQuery(raw);
-    parsed.when(
-      success: (result) {
-        if (result.operation != null) query.operation = result.operation;
-        if (result.propertyKind != null) query.propertyKind = result.propertyKind;
-        if (result.bedroomsMin != null) query.bedroomsMin = result.bedroomsMin;
-      },
-      failure: (_, _) {},
-    );
-    load();
-  }
-
-  Future<void> _applyParsedVehicleQuery(String raw) async {
-    final vehicles = _vehicles;
-    if (vehicles == null) {
-      load();
-      return;
-    }
-    final parsed = await vehicles.parseQuery(raw);
-    parsed.when(
-      success: (result) {
-        if (result.operation != null) query.operation = result.operation;
-        if (result.vehicleType != null) query.vehicleType = result.vehicleType;
-        if (result.fuelType != null) query.fuelType = result.fuelType;
-        if (result.transmission != null) query.transmission = result.transmission;
-        if (result.yearMin != null) query.yearMin = result.yearMin;
-        if (result.mileageMax != null) query.mileageMax = result.mileageMax;
-      },
-      failure: (_, _) {},
-    );
-    load();
-  }
-
-  Future<void> saveCurrentSearch(String name) async {
-    if (marketplace == 'vehicles') {
-      final vehicles = _vehicles;
-      if (vehicles == null) return;
-      await vehicles.saveSearch(name: name, query: query.toQueryParameters());
-      return;
-    }
-    final property = _property;
-    if (property == null) return;
-    await property.saveSearch(name: name, query: query.toQueryParameters());
   }
 
   void setOperation(String? operation) {

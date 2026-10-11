@@ -6,7 +6,7 @@ const uuid = z.string().uuid();
 const optionalPositive = z.coerce.number().int().positive().optional();
 
 export const relatedContextSchema = z.object({
-  marketplaceCode: z.enum(['gold', 'property', 'vehicles']).optional(),
+  marketplaceCode: z.enum(['gold']).optional(),
   marketplaceId: optionalPositive,
   categoryCode: z.string().trim().max(64).optional(),
   categoryId: optionalPositive,
@@ -37,7 +37,7 @@ export const createTicketSchema = z
     categoryId: optionalPositive,
     categoryCode: z.string().trim().max(64).optional(),
     marketplaceId: optionalPositive,
-    marketplaceCode: z.enum(['gold', 'property', 'vehicles']).optional(),
+    marketplaceCode: z.enum(['gold']).optional(),
     priority: z.enum(PUBLIC_PRIORITIES).or(z.enum(['low', 'normal', 'high', 'urgent'])).optional(),
     channel: z.enum(CHANNELS).optional(),
     guestEmail: z.string().email().max(191).optional(),
@@ -128,7 +128,7 @@ export const liveChatSchema = relatedContextSchema.extend({
 export const kbListQuerySchema = paginationSchema.extend({
   q: z.string().trim().max(200).optional(),
   categoryCode: z.string().trim().max(64).optional(),
-  marketplaceCode: z.enum(['gold', 'property', 'vehicles']).optional(),
+  marketplaceCode: z.enum(['gold']).optional(),
   language: z.string().trim().max(10).optional(),
 });
 
@@ -148,7 +148,7 @@ export const contactSchema = z.object({
 
 export const forumListQuerySchema = paginationSchema.extend({
   categoryCode: z.string().trim().max(64).optional(),
-  marketplaceCode: z.enum(['gold', 'property', 'vehicles']).optional(),
+  marketplaceCode: z.enum(['gold']).optional(),
   q: z.string().trim().max(200).optional(),
 });
 

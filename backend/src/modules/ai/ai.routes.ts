@@ -26,8 +26,6 @@ import {
   translateText,
 } from './ai.service';
 import { publicToolCatalog } from './ai.tools';
-import { runValuation as runPropertyValuation } from '../../marketplaces/property/property.ai';
-import { runValuation as runVehicleValuation } from '../../marketplaces/vehicles/vehicles.ai';
 import { generateForecasts } from '../../marketplaces/gold/gold.ai';
 import { throughGateway } from './ai.gateway';
 
@@ -272,96 +270,6 @@ aiRouter.post(
   asyncHandler(async (req, res) => {
     const { listingId } = body<{ listingId?: number }>(req);
     return ok(res, await fraudCheck(req, listingId));
-  }),
-);
-
-aiRouter.post(
-  '/property/valuate',
-  validate({
-    body: z.object({
-      listingId: z.coerce.number().int().positive().optional(),
-      propertyKind: z.string().trim().min(1).max(48),
-      operation: z.enum(['sell', 'rent']).default('sell'),
-      cityId: z.coerce.number().int().positive(),
-      areaId: z.coerce.number().int().positive().optional(),
-      areaValue: z.coerce.number().positive().max(100_000_000),
-      areaUnit: z.string().trim().min(1).max(24),
-      bedrooms: z.coerce.number().int().min(0).max(50).optional(),
-      bathrooms: z.coerce.number().int().min(0).max(50).optional(),
-      furnishing: z.enum(['unfurnished', 'semi_furnished', 'furnished', 'fully_furnished']).optional(),
-      yearBuilt: z.coerce.number().int().min(1800).max(2100).optional(),
-      amenityCount: z.coerce.number().int().min(0).max(80).optional(),
-    }),
-  }),
-  asyncHandler(async (req, res) => {
-    const input = body<Parameters<typeof runPropertyValuation>[0]>(req);
-    const gated = await throughGateway(req, {
-      task: 'property_valuation',
-      input,
-      run: async () => {
-        const valuation = await runPropertyValuation({
-          ...input,
-          countryId: req.context.countryId ?? 1,
-          currency: req.context.currency,
-          requestedBy: req.auth!.userId,
-        });
-        return { ...valuation, model: 'property-valuation', confidence: valuation.confidence, latencyMs: 0 };
-      },
-    });
-    if ('accepted' in gated) return accepted(res, gated);
-    return ok(res, {
-      ...gated.result,
-      meta: gated.meta,
-      disclaimer: 'Automated estimate from comparable asking prices. Not a surveyed professional valuation.',
-    });
-  }),
-);
-
-aiRouter.post(
-  '/vehicles/valuate',
-  validate({
-    body: z.object({
-      listingId: z.coerce.number().int().positive().optional(),
-      makeId: z.coerce.number().int().positive(),
-      modelId: z.coerce.number().int().positive().optional(),
-      year: z.coerce.number().int().min(1950).max(2100),
-      mileageKm: z.coerce.number().min(0).optional(),
-      askingPrice: z.coerce.number().min(0).optional(),
-    }),
-  }),
-  asyncHandler(async (req, res) => {
-    const input = body<{
-      listingId?: number;
-      makeId: number;
-      modelId?: number;
-      year: number;
-      mileageKm?: number;
-      askingPrice?: number;
-    }>(req);
-    const gated = await throughGateway(req, {
-      task: 'vehicle_estimate',
-      input,
-      run: async () => {
-        const valuation = await runVehicleValuation({
-          listingId: input.listingId ?? null,
-          requestedBy: req.auth!.userId,
-          countryId: req.context.countryId,
-          makeId: input.makeId,
-          modelId: input.modelId ?? null,
-          year: input.year,
-          mileageKm: input.mileageKm ?? null,
-          askingPrice: input.askingPrice ?? null,
-          currency: req.context.currency,
-        });
-        return { ...valuation, model: 'vehicle-valuation', confidence: valuation.confidence, latencyMs: 0 };
-      },
-    });
-    if ('accepted' in gated) return accepted(res, gated);
-    return ok(res, {
-      ...gated.result,
-      meta: gated.meta,
-      disclaimer: 'Estimate from comparable listings. Not a guaranteed trade-in or retail price.',
-    });
   }),
 );
 

@@ -203,7 +203,7 @@ export async function executeSearch(
         ...understood,
         usedAi: true,
         queries: understood.queries.map((query) =>
-          validateSearchQuery(mergeAiInterpretation(query, interpretation, ['gold', 'property', 'vehicles']), {
+          validateSearchQuery(mergeAiInterpretation(query, interpretation, ['gold']), {
             currency: ctx.currency,
             language: ctx.language,
             countryCode: ctx.countryCode,
@@ -263,7 +263,7 @@ export async function executeSearch(
     if (cached) return cached;
   }
 
-  const grouped: Record<string, SearchHitPayload[]> = { gold: [], property: [], vehicles: [] };
+  const grouped: Record<string, SearchHitPayload[]> = { gold: [] };
   let parts: PartHit[] = [];
   let items: SearchHitPayload[] = [];
   let total = 0;
@@ -443,11 +443,7 @@ export function parseGetSearch(query: GetSearchQuery) {
   return query;
 }
 
-const MARKETPLACES = [
-  { id: 1, code: 'gold', name: 'Gold' },
-  { id: 2, code: 'property', name: 'Property' },
-  { id: 3, code: 'vehicles', name: 'Vehicles' },
-];
+const MARKETPLACES = [{ id: 1, code: 'gold', name: 'Gold' }];
 
 async function interpretSearchViaPlatform(
   query: string,

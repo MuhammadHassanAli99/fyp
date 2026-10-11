@@ -47,7 +47,6 @@ String? _sanitize(String? input) {
     '/search',
     '/home',
     '/favorites',
-    '/vehicles/parts',
     '/notifications',
     '/subscription',
     '/checkout/',
