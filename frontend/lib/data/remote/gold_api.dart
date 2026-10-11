@@ -94,4 +94,45 @@ class GoldApi {
         },
         parser: (d) => Map<String, dynamic>.from(d as Map),
       );
+
+  Future<GoldStoreListResult> listStores({
+    String? q,
+    int page = 1,
+    int perPage = 20,
+  }) =>
+      _client.get(
+        '/gold/stores',
+        queryParameters: {
+          'q': ?q,
+          'page': page,
+          'perPage': perPage,
+        },
+        parser: (d) =>
+            GoldStoreListResult.fromJson(Map<String, dynamic>.from(d as Map)),
+      );
+
+  Future<List<GoldStoreSummary>> myStores() => _client.get(
+        '/gold/stores/mine',
+        parser: (d) => (d as List)
+            .whereType<Map>()
+            .map((e) => GoldStoreSummary.fromJson(Map<String, dynamic>.from(e)))
+            .toList(),
+      );
+
+  Future<Map<String, dynamic>> getStore(int id) => _client.get(
+        '/gold/stores/$id',
+        parser: (d) => Map<String, dynamic>.from(d as Map),
+      );
+
+  Future<Map<String, dynamic>> applyForStore(Map<String, dynamic> body) =>
+      _client.post(
+        '/gold/stores/apply',
+        data: body,
+        parser: (d) => Map<String, dynamic>.from(d as Map),
+      );
+
+  Future<Map<String, dynamic>> submitStore(int id) => _client.post(
+        '/gold/stores/$id/submit',
+        parser: (d) => Map<String, dynamic>.from(d as Map),
+      );
 }

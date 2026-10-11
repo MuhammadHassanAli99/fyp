@@ -100,4 +100,59 @@ class GoldRepository {
       return Failure(e.toString());
     }
   }
+
+  Future<Result<GoldStoreListResult>> listStores({
+    String? q,
+    int page = 1,
+  }) async {
+    try {
+      return Success(await _api.listStores(q: q, page: page));
+    } on ApiException catch (e) {
+      return Failure(e.message, code: e.code);
+    } catch (e) {
+      return Failure(e.toString());
+    }
+  }
+
+  Future<Result<List<GoldStoreSummary>>> myStores() async {
+    try {
+      return Success(await _api.myStores());
+    } on ApiException catch (e) {
+      return Failure(e.message, code: e.code);
+    } catch (e) {
+      return Failure(e.toString());
+    }
+  }
+
+  Future<Result<Map<String, dynamic>>> getStore(int id) async {
+    try {
+      return Success(await _api.getStore(id));
+    } on ApiException catch (e) {
+      return Failure(e.message, code: e.code);
+    } catch (e) {
+      return Failure(e.toString());
+    }
+  }
+
+  Future<Result<Map<String, dynamic>>> applyForStore(
+    Map<String, dynamic> body,
+  ) async {
+    try {
+      return Success(await _api.applyForStore(body));
+    } on ApiException catch (e) {
+      return Failure(e.message, code: e.code);
+    } catch (e) {
+      return Failure(e.toString());
+    }
+  }
+
+  Future<Result<Map<String, dynamic>>> submitStore(int id) async {
+    try {
+      return Success(await _api.submitStore(id));
+    } on ApiException catch (e) {
+      return Failure(e.message, code: e.code);
+    } catch (e) {
+      return Failure(e.toString());
+    }
+  }
 }

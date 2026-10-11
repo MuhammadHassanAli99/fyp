@@ -318,25 +318,66 @@ class _BasicsStep extends StatelessWidget {
           const SizedBox(height: 24),
           const Text('Sell as'),
           const SizedBox(height: 8),
+          Text(
+            'Personal items are posted as a person. Brand/shop ads need a Gold store with a proper application.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.65),
+                ),
+          ),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
               ChoiceChip(
-                label: const Text('Personal profile'),
+                label: const Text('Person (personal ad)'),
                 selected: store.sellerBusinessId.value == null,
                 onSelected: (_) => store.sellerBusinessId.value = null,
                 selectedColor: AppColors.gold.withValues(alpha: 0.25),
               ),
               for (final business in store.businesses.value)
                 ChoiceChip(
-                  label: Text(business.name),
+                  label: Text('${business.name} (store)'),
                   selected: store.sellerBusinessId.value == business.id,
                   onSelected: (_) => store.sellerBusinessId.value = business.id,
                   selectedColor: AppColors.gold.withValues(alpha: 0.25),
                 ),
             ],
           ),
+          if (store.businesses.value.isEmpty) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => context.push(AppRoutes.goldStoreApply),
+                icon: const Icon(Icons.storefront_outlined, size: 18),
+                label: const Text('Open a Gold store (brand)'),
+              ),
+            ),
+          ],
+          if (store.sellerBusinessId.value != null) ...[
+            const SizedBox(height: 8),
+            Builder(builder: (context) {
+              final progress = store.myGoldStores.value
+                  .where((s) => s.id == store.sellerBusinessId.value)
+                  .firstOrNull;
+              if (progress == null) {
+                return Text(
+                  'Post complete ads (photo, karat, weight). A store needs 3–4 proper ads before it is shown as a brand.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                );
+              }
+              return Text(
+                progress.brandReady
+                    ? 'This store is live as a brand · ${progress.proper}/${progress.minRequired} proper ads'
+                    : 'Building brand storefront · ${progress.proper}/${progress.minRequired} proper ads (need ${progress.minRequired - progress.proper} more)',
+                style: Theme.of(context).textTheme.bodySmall,
+              );
+            }),
+          ],
           const SizedBox(height: 24),
           const Text('I want to'),
           const SizedBox(height: 8),

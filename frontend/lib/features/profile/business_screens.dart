@@ -108,7 +108,7 @@ class _BusinessEditScreenState extends State<BusinessEditScreen> {
 
   static const kinds = [
     ('company', 'Company'),
-    ('gold_shop', 'Gold shop'),
+    ('gold_shop', 'Gold store (brand shop)'),
   ];
 
   @override
@@ -119,6 +119,10 @@ class _BusinessEditScreenState extends State<BusinessEditScreen> {
   }
 
   Future<void> _save() async {
+    if (_kind == 'gold_shop') {
+      if (context.mounted) context.push(AppRoutes.goldStoreApply);
+      return;
+    }
     setState(() => _saving = true);
     final result = await ServiceLocator.instance.profileRepository.createBusiness({
       'kind': _kind,
@@ -167,22 +171,34 @@ class _BusinessEditScreenState extends State<BusinessEditScreen> {
                 ),
             ],
           ),
+          if (_kind == 'gold_shop') ...[
+            const SizedBox(height: 12),
+            Text(
+              'Gold stores are brand shops. They are created through a proper application and need at least 3 properly posted ads before going live. Personal items should be posted as a person.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           const SizedBox(height: 16),
-          TextField(
-            controller: _name,
-            decoration: const InputDecoration(labelText: 'Business name'),
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _description,
-            maxLines: 4,
-            decoration: const InputDecoration(labelText: 'About'),
-          ),
-          const SizedBox(height: 20),
+          if (_kind != 'gold_shop') ...[
+            TextField(
+              controller: _name,
+              decoration: const InputDecoration(labelText: 'Business name'),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _description,
+              maxLines: 4,
+              decoration: const InputDecoration(labelText: 'About'),
+            ),
+            const SizedBox(height: 20),
+          ],
           FilledButton(
-            onPressed: _saving || _name.text.trim().length < 2 ? null : _save,
-            child: Text(l10n.save),
+            onPressed: _saving ||
+                    (_kind != 'gold_shop' && _name.text.trim().length < 2)
+                ? null
+                : _save,
+            child: Text(_kind == 'gold_shop' ? 'Continue to store application' : l10n.save),
           ),
         ],
       ),
@@ -260,6 +276,42 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                     if (_data?['address'] != null) ...[
                       const SizedBox(height: 12),
                       Text(_data!['address'] as String),
+                    ],
+                    if ((_data?['kind'] as String?) == 'gold_shop') ...[
+                      const SizedBox(height: 16),
+                      Builder(builder: (context) {
+                        final ext = _data?['extensions'];
+                        final goldShop = ext is Map ? ext['goldShop'] : null;
+                        final shop = goldShop is Map
+                            ? Map<String, dynamic>.from(goldShop)
+                            : const <String, dynamic>{};
+                        final proper =
+                            (shop['properListingCount'] as num?)?.toInt() ?? 0;
+                        final minRequired =
+                            (shop['minListingsRequired'] as num?)?.toInt() ?? 3;
+                        final status =
+                            shop['storefrontStatus']?.toString() ?? 'draft';
+                        final brandReady = shop['isBrandReady'] as bool? ?? false;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Gold storefront',
+                                style: Theme.of(context).textTheme.titleMedium),
+                            const SizedBox(height: 6),
+                            Text(
+                              brandReady
+                                  ? 'Live brand shop · $proper / $minRequired proper ads'
+                                  : 'Status: $status · $proper / $minRequired proper ads required',
+                            ),
+                            const SizedBox(height: 8),
+                            OutlinedButton(
+                              onPressed: () =>
+                                  context.push('/gold/stores/${widget.businessId}'),
+                              child: const Text('Open store page'),
+                            ),
+                          ],
+                        );
+                      }),
                     ],
                   ],
                 ),

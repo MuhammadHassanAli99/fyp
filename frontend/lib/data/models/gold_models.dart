@@ -457,3 +457,119 @@ class GoldBuyResult {
   final String? disclaimer;
   final bool requiresPhysicalVerification;
 }
+
+/// Gold Marketplace brand/shop storefront (not a product maker brand).
+class GoldStoreSummary {
+  const GoldStoreSummary({
+    required this.id,
+    required this.name,
+    required this.slug,
+    this.legalName,
+    this.tradeName,
+    this.logoUrl,
+    this.description,
+    this.address,
+    this.verified = false,
+    this.storefrontStatus = 'draft',
+    this.properListingCount = 0,
+    this.minListingsRequired = 3,
+    this.listingsRemaining = 0,
+    this.isBrandReady = false,
+    this.businessStatus,
+    this.isBrand = false,
+  });
+
+  factory GoldStoreSummary.fromJson(Map<String, dynamic> json) {
+    final store = json['store'] is Map
+        ? Map<String, dynamic>.from(json['store'] as Map)
+        : json;
+    final proper = (json['properListingCount'] as num?)?.toInt() ??
+        (store['properListingCount'] as num?)?.toInt() ??
+        0;
+    final minRequired = (json['minListingsRequired'] as num?)?.toInt() ??
+        (store['minListingsRequired'] as num?)?.toInt() ??
+        3;
+    final remaining = (store['listingsRemaining'] as num?)?.toInt() ??
+        (minRequired - proper).clamp(0, minRequired);
+    return GoldStoreSummary(
+      id: (json['id'] as num?)?.toInt() ??
+          (store['businessId'] as num?)?.toInt() ??
+          0,
+      name: (json['name'] ?? store['name'] ?? json['legalName'] ?? 'Gold store')
+          .toString(),
+      slug: (json['slug'] ?? store['slug'] ?? '').toString(),
+      legalName: (json['legalName'] ?? store['legalName'])?.toString(),
+      tradeName: (json['tradeName'] ?? store['tradeName'])?.toString(),
+      logoUrl: (json['logoUrl'] ?? store['logoUrl'])?.toString(),
+      description: json['description']?.toString(),
+      address: json['address']?.toString(),
+      verified: json['verified'] as bool? ?? store['verified'] as bool? ?? false,
+      storefrontStatus:
+          (json['storefrontStatus'] ?? store['storefrontStatus'] ?? 'draft')
+              .toString(),
+      properListingCount: proper,
+      minListingsRequired: minRequired,
+      listingsRemaining: remaining,
+      isBrandReady: json['isBrandReady'] as bool? ??
+          store['isBrandReady'] as bool? ??
+          json['isBrand'] as bool? ??
+          false,
+      businessStatus: (json['status'] ?? store['businessStatus'])?.toString(),
+      isBrand:
+          json['isBrand'] as bool? ?? store['isBrandReady'] as bool? ?? false,
+    );
+  }
+
+  final int id;
+  final String name;
+  final String slug;
+  final String? legalName;
+  final String? tradeName;
+  final String? logoUrl;
+  final String? description;
+  final String? address;
+  final bool verified;
+  final String storefrontStatus;
+  final int properListingCount;
+  final int minListingsRequired;
+  final int listingsRemaining;
+  final bool isBrandReady;
+  final String? businessStatus;
+  final bool isBrand;
+
+  String get progressLabel =>
+      '$properListingCount / $minListingsRequired proper ads';
+
+  String get statusLabel => switch (storefrontStatus) {
+        'pending_review' => 'Pending review',
+        'building' => 'Building inventory',
+        'active' => 'Live brand store',
+        'suspended' => 'Suspended',
+        _ => 'Draft application',
+      };
+}
+
+class GoldStoreListResult {
+  const GoldStoreListResult({
+    required this.items,
+    this.page = 1,
+    this.perPage = 20,
+    this.total = 0,
+  });
+
+  factory GoldStoreListResult.fromJson(Map<String, dynamic> json) =>
+      GoldStoreListResult(
+        items: (json['items'] as List? ?? const [])
+            .whereType<Map>()
+            .map((e) => GoldStoreSummary.fromJson(Map<String, dynamic>.from(e)))
+            .toList(),
+        page: (json['page'] as num?)?.toInt() ?? 1,
+        perPage: (json['perPage'] as num?)?.toInt() ?? 20,
+        total: (json['total'] as num?)?.toInt() ?? 0,
+      );
+
+  final List<GoldStoreSummary> items;
+  final int page;
+  final int perPage;
+  final int total;
+}

@@ -76,3 +76,7 @@ tmp/
 temp/
 __pycache__/
 *.pyc
+.venv/
+.venv-docs/
+docs/.pptx-venv/
+docs/_pptx_assets/

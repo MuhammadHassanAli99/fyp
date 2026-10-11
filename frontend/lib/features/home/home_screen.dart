@@ -101,6 +101,12 @@ class _HomeScreenState extends State<HomeScreen> {
         showBack: false,
         title: _marketplaceTitle,
         actions: [
+          if (marketplace == 'gold')
+            IconButton(
+              icon: const Icon(Icons.storefront_outlined),
+              tooltip: 'Gold stores',
+              onPressed: () => context.push(AppRoutes.goldStores),
+            ),
           IconButton(
             icon: const Icon(Icons.compare_arrows),
             onPressed: () => context.push(AppRoutes.compare),
@@ -222,6 +228,31 @@ class _HomeScreenState extends State<HomeScreen> {
                             onSelected: (_) => _store.setOperation(op.$1),
                             selectedColor:
                                 AppColors.gold.withValues(alpha: 0.25),
+                          ),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ActionChip(
+                          avatar: const Icon(Icons.storefront, size: 16),
+                          label: const Text('Stores'),
+                          onPressed: () => context.push(AppRoutes.goldStores),
+                        ),
+                      ),
+                      for (final seller in [
+                        (null, 'All sellers'),
+                        ('individual', 'Persons'),
+                        ('business', 'Stores'),
+                      ])
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilterChip(
+                            label: Text(seller.$2),
+                            selected: _store.query.sellerType == seller.$1,
+                            onSelected: (s) {
+                              final next = _store.query.copy();
+                              next.sellerType = s ? seller.$1 : null;
+                              _store.applyFilters(next);
+                            },
                           ),
                         ),
                       const SizedBox(width: 8),

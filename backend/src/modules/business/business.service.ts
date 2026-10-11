@@ -105,6 +105,16 @@ export async function createBusiness(userId: number, input: CreateBusinessInput)
     return businessId;
   });
 
+  if (input.kind === 'gold_shop') {
+    await execute(
+      `INSERT INTO gold_shop_profiles
+         (business_id, min_listings_required, storefront_status, proper_listing_count)
+       VALUES (?, 3, 'draft', 0)
+       ON DUPLICATE KEY UPDATE business_id = business_id`,
+      [id],
+    );
+  }
+
   void recordAudit({ action: 'business.created', entityType: 'business', entityId: id, after: { kind: input.kind } });
   return getBusiness(id, userId, false);
 }
@@ -520,6 +530,16 @@ async function loadExtensions(businessId: number, kind: string) {
           category: String(row.category),
           purity: (row.purity as string | null) ?? null,
         })),
+        minListingsRequired: Number(profile?.min_listings_required ?? 3),
+        storefrontStatus: String(profile?.storefront_status ?? 'draft'),
+        properListingCount: Number(profile?.proper_listing_count ?? 0),
+        applicationSubmittedAt: profile?.application_submitted_at
+          ? (profile.application_submitted_at as Date).toISOString()
+          : null,
+        storefrontUnlockedAt: profile?.storefront_unlocked_at
+          ? (profile.storefront_unlocked_at as Date).toISOString()
+          : null,
+        isBrandReady: String(profile?.storefront_status ?? '') === 'active',
       },
     };
   }
