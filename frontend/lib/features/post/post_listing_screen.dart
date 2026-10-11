@@ -14,7 +14,6 @@ import '../../core/auth/guest_feature.dart';
 import '../../core/result/async_state.dart';
 import '../../core/result/result.dart';
 import '../../data/models/gold_models.dart';
-import '../../data/models/property_models.dart';
 import '../../shared/widgets/app_scaffold.dart';
 import '../../shared/widgets/drop_zone.dart';
 import 'post_listing_store.dart';
@@ -38,10 +37,8 @@ class _PostListingScreenState extends State<PostListingScreen> {
       listings: sl.listingsRepository,
       settings: sl.settingsRepository,
       prefs: sl.prefs,
-      vehiclesApi: sl.vehiclesApi,
       profile: sl.profileRepository,
       gold: sl.goldRepository,
-      property: sl.propertyRepository,
       database: sl.database,
       ai: sl.aiRepository,
     );
@@ -307,39 +304,16 @@ class _BasicsStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SignalBuilder(builder: (context) {
-      final code = store.marketplaceCode.value;
-      final ops = switch (code) {
-        'gold' => const [('sell', 'Sell'), ('buy', 'Wanted'), ('auction', 'Auction')],
-        'vehicles' => const [
-            ('sell', 'Sell'),
-            ('rent', 'Rent'),
-            ('buy', 'Wanted'),
-            ('auction', 'Auction'),
-          ],
-        _ => const [('sell', 'Sell'), ('rent', 'Rent'), ('buy', 'Wanted')],
-      };
+      const ops = [('sell', 'Sell'), ('buy', 'Wanted'), ('auction', 'Auction')];
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text('Marketplace'),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final m in [
-                ('gold', 'Gold', Icons.diamond_outlined),
-                ('property', 'Property', Icons.home_work_outlined),
-                ('vehicles', 'Vehicles', Icons.directions_car_outlined),
-              ])
-                ChoiceChip(
-                  avatar: Icon(m.$3, size: 18),
-                  label: Text(m.$2),
-                  selected: code == m.$1,
-                  onSelected: (_) => store.setMarketplace(m.$1),
-                  selectedColor: AppColors.gold.withValues(alpha: 0.25),
-                ),
-            ],
+          const Chip(
+            avatar: Icon(Icons.diamond_outlined, size: 18),
+            label: Text('Gold'),
+            backgroundColor: AppColors.gold,
           ),
           const SizedBox(height: 24),
           const Text('Sell as'),
@@ -380,7 +354,7 @@ class _BasicsStep extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Sell gold, property or vehicles in a few steps — same flow as Zameen and PakWheels.',
+            'Sell gold in a few simple steps.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context)
                       .colorScheme
@@ -454,11 +428,7 @@ class _DetailsStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SignalBuilder(builder: (context) {
-      return switch (store.marketplaceCode.value) {
-        'property' => _PropertyDetails(store: store),
-        'vehicles' => _VehicleDetails(store: store),
-        _ => _GoldDetails(store: store),
-      };
+      return _GoldDetails(store: store);
     });
   }
 }
@@ -636,333 +606,6 @@ class _GoldDetails extends StatelessWidget {
               keyboardType: TextInputType.number,
             ),
           ],
-        ],
-      );
-    });
-  }
-}
-
-class _PropertyDetails extends StatelessWidget {
-  const _PropertyDetails({required this.store});
-  final PostListingStore store;
-
-  @override
-  Widget build(BuildContext context) {
-    return SignalBuilder(builder: (context) {
-      final catalog = store.propertyCatalog.value;
-      final types = catalog?.typesForOperation(store.operation.value) ?? const <PropertyTypeRule>[];
-      final typeValue = types.any((t) => t.code == store.propertyKind.value)
-          ? store.propertyKind.value
-          : (types.isNotEmpty ? types.first.code : store.propertyKind.value);
-      final units = catalog?.areaUnits ?? const <PropertyNamedCode>[];
-      final unitValue = units.any((u) => u.code == store.areaUnit.value)
-          ? store.areaUnit.value
-          : (units.isNotEmpty ? units.first.code : store.areaUnit.value);
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          DropdownButtonFormField<String>(
-            initialValue: typeValue,
-            decoration: const InputDecoration(labelText: 'Property type'),
-            items: [
-              for (final type in types)
-                DropdownMenuItem(value: type.code, child: Text(type.label)),
-              if (types.isEmpty) ...const [
-                DropdownMenuItem(value: 'house', child: Text('House')),
-                DropdownMenuItem(value: 'apartment', child: Text('Apartment')),
-                DropdownMenuItem(value: 'flat', child: Text('Flat')),
-                DropdownMenuItem(value: 'villa', child: Text('Villa')),
-                DropdownMenuItem(value: 'office', child: Text('Office')),
-                DropdownMenuItem(value: 'shop', child: Text('Shop')),
-                DropdownMenuItem(
-                  value: 'residential_plot',
-                  child: Text('Residential plot'),
-                ),
-                DropdownMenuItem(
-                  value: 'commercial_plot',
-                  child: Text('Commercial plot'),
-                ),
-              ],
-            ],
-            onChanged: (v) {
-              if (v != null) store.propertyKind.value = v;
-            },
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _StoreField(
-                  value: store.areaValue.value,
-                  onChanged: (v) => store.areaValue.value = v,
-                  label: 'Area',
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-              initialValue: unitValue,
-                  decoration: const InputDecoration(labelText: 'Unit'),
-                  items: [
-                    for (final unit in units)
-                      DropdownMenuItem(value: unit.code, child: Text(unit.name)),
-                    if (units.isEmpty) ...const [
-                    DropdownMenuItem(value: 'sqft', child: Text('Sq ft')),
-                    DropdownMenuItem(value: 'sqm', child: Text('Sq m')),
-                    DropdownMenuItem(value: 'marla', child: Text('Marla')),
-                    DropdownMenuItem(value: 'kanal', child: Text('Kanal')),
-                    ],
-                  ],
-                  onChanged: (v) {
-                    if (v != null) store.areaUnit.value = v;
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _StoreField(
-                  value: store.bedrooms.value,
-                  onChanged: (v) => store.bedrooms.value = v,
-                  label: 'Bedrooms',
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _StoreField(
-                  value: store.bathrooms.value,
-                  onChanged: (v) => store.bathrooms.value = v,
-                  label: 'Bathrooms',
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _StoreField(
-            value: store.societyName.value,
-            onChanged: (v) => store.societyName.value = v,
-            label: 'Society / project',
-            hint: 'e.g. DHA Phase 5',
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-              initialValue: store.furnishing.value,
-            decoration: const InputDecoration(labelText: 'Furnishing'),
-            items: const [
-              DropdownMenuItem(value: 'unfurnished', child: Text('Unfurnished')),
-              DropdownMenuItem(
-                value: 'semi_furnished',
-                child: Text('Semi furnished'),
-              ),
-              DropdownMenuItem(value: 'furnished', child: Text('Furnished')),
-              DropdownMenuItem(
-                value: 'fully_furnished',
-                child: Text('Fully furnished'),
-              ),
-            ],
-            onChanged: (v) => store.furnishing.value = v,
-          ),
-          if (store.operation.value == 'rent') ...[
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: store.rentPeriod.value,
-              decoration: const InputDecoration(labelText: 'Rent period'),
-              items: const [
-                DropdownMenuItem(value: 'monthly', child: Text('Monthly')),
-                DropdownMenuItem(value: 'weekly', child: Text('Weekly')),
-                DropdownMenuItem(value: 'daily', child: Text('Daily')),
-                DropdownMenuItem(value: 'yearly', child: Text('Yearly')),
-              ],
-              onChanged: (v) {
-                if (v != null) store.rentPeriod.value = v;
-              },
-            ),
-          ],
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Swimming pool'),
-            value: store.hasSwimmingPool.value,
-            onChanged: (v) => store.hasSwimmingPool.value = v,
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Gym'),
-            value: store.hasGym.value,
-            onChanged: (v) => store.hasGym.value = v,
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Garden'),
-            value: store.hasGarden.value,
-            onChanged: (v) => store.hasGarden.value = v,
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Elevator'),
-            value: store.hasElevator.value,
-            onChanged: (v) => store.hasElevator.value = v,
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Gated community'),
-            value: store.isGatedCommunity.value,
-            onChanged: (v) => store.isGatedCommunity.value = v,
-          ),
-        ],
-      );
-    });
-  }
-}
-
-class _VehicleDetails extends StatelessWidget {
-  const _VehicleDetails({required this.store});
-  final PostListingStore store;
-
-  @override
-  Widget build(BuildContext context) {
-    return SignalBuilder(builder: (context) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text('Vehicle type'),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final t in (store.vehicleCatalog.value
-                      ?.typesForOperation(store.operation.value)
-                      .map((e) => e.code)
-                      .toList() ??
-                  const [
-                    'car',
-                    'motorcycle',
-                    'van',
-                    'truck',
-                    'bus',
-                    'taxi',
-                    'rickshaw',
-                    'boat',
-                    'yacht',
-                    'jet_ski',
-                    'heavy_machinery',
-                  ]))
-                ChoiceChip(
-                  label: Text(t.replaceAll('_', ' ')),
-                  selected: store.vehicleType.value == t,
-                  onSelected: (_) async {
-                    store.vehicleType.value = t;
-                    store.makeId.value = null;
-                    store.modelId.value = null;
-                    await store.loadMakes();
-                  },
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<int>(
-              initialValue: store.makeId.value,
-            decoration: const InputDecoration(labelText: 'Make'),
-            items: [
-              for (final m in store.makes.value)
-                if (m.intId != null)
-                  DropdownMenuItem(value: m.intId, child: Text(m.name)),
-            ],
-            onChanged: (v) {
-              if (v != null) store.loadModels(v);
-            },
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<int>(
-              initialValue: store.modelId.value,
-            decoration: const InputDecoration(labelText: 'Model'),
-            items: [
-              for (final m in store.models.value)
-                if (m.intId != null)
-                  DropdownMenuItem(value: m.intId, child: Text(m.name)),
-            ],
-            onChanged: (v) => store.modelId.value = v,
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _StoreField(
-                  value: store.year.value,
-                  onChanged: (v) => store.year.value = v,
-                  label: 'Year',
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _StoreField(
-                  value: store.mileage.value,
-                  onChanged: (v) => store.mileage.value = v,
-                  label: 'Mileage (km)',
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Builder(builder: (context) {
-            final fuels = store.vehicleCatalog.value?.fuels ?? const [];
-            return DropdownButtonFormField<String>(
-              initialValue: store.fuelType.value,
-              decoration: const InputDecoration(labelText: 'Fuel'),
-              items: [
-                if (fuels.isEmpty)
-                  DropdownMenuItem(
-                    value: store.fuelType.value,
-                    child: Text(store.fuelType.value),
-                  ),
-                for (final f in fuels)
-                  DropdownMenuItem(value: f.code, child: Text(f.name)),
-              ],
-              onChanged: (v) {
-                if (v != null) store.fuelType.value = v;
-              },
-            );
-          }),
-          const SizedBox(height: 12),
-          Builder(builder: (context) {
-            final gears = store.vehicleCatalog.value?.transmissions ?? const [];
-            return DropdownButtonFormField<String>(
-              initialValue: store.transmission.value,
-              decoration: const InputDecoration(labelText: 'Transmission'),
-              items: [
-                if (gears.isEmpty)
-                  DropdownMenuItem(
-                    value: store.transmission.value,
-                    child: Text(store.transmission.value),
-                  ),
-                for (final t in gears)
-                  DropdownMenuItem(value: t.code, child: Text(t.name)),
-              ],
-              onChanged: (v) {
-                if (v != null) store.transmission.value = v;
-              },
-            );
-          }),
-          const SizedBox(height: 12),
-          _StoreField(
-            value: store.colorExterior.value,
-            onChanged: (v) => store.colorExterior.value = v,
-            label: 'Exterior color',
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Finance available'),
-            value: store.financeAvailable.value,
-            onChanged: (v) => store.financeAvailable.value = v,
-          ),
         ],
       );
     });
@@ -1309,27 +952,12 @@ class _ReviewStep extends StatelessWidget {
         ('Operation', store.operation.value),
         ('Category', store.selectedCategoryLabel.value ?? '—'),
         ('Title', store.title.value),
-        (
-          'Price',
-          '${store.price.value} ${store.currency.value}'
-              '${store.operation.value == 'rent' ? ' / ${store.rentPeriod.value}' : ''}'
-        ),
+        ('Price', '${store.price.value} ${store.currency.value}'),
         ('Phone', store.contactPhone.value),
         if (store.marketplaceCode.value == 'gold') ...[
           ('Karat', '${store.karat.value}K'),
           ('Weight', '${store.weightG.value} g'),
           ('Form', store.goldForm.value),
-        ],
-        if (store.marketplaceCode.value == 'property') ...[
-          ('Type', store.propertyKind.value),
-          ('Area', '${store.areaValue.value} ${store.areaUnit.value}'),
-          if (store.societyName.value.isNotEmpty)
-            ('Society', store.societyName.value),
-        ],
-        if (store.marketplaceCode.value == 'vehicles') ...[
-          ('Year', store.year.value),
-          ('Mileage', '${store.mileage.value} km'),
-          ('Fuel', store.fuelType.value),
         ],
       ];
 

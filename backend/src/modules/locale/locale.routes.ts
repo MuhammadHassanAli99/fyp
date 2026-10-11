@@ -669,7 +669,7 @@ localeRouter.post(
     body: z.object({
       amount: z.coerce.number().min(0),
       appliesTo: z.enum(['subscription', 'promotion', 'advertisement', 'commission', 'all']).optional(),
-      marketplace: z.enum(['gold', 'property', 'vehicles']).optional(),
+      marketplace: z.enum(['gold']).optional(),
       productType: z.string().trim().max(64).optional(),
       currency: z.string().length(3).toUpperCase().optional(),
       regionId: z.coerce.number().int().positive().optional(),
@@ -681,7 +681,7 @@ localeRouter.post(
     const input = body<{
       amount: number;
       appliesTo?: 'subscription' | 'promotion' | 'advertisement' | 'commission' | 'all';
-      marketplace?: 'gold' | 'property' | 'vehicles';
+      marketplace?: 'gold';
       productType?: string;
       currency?: string;
       regionId?: number;
@@ -705,13 +705,13 @@ localeRouter.get(
   '/regulations',
   validate({
     query: z.object({
-      marketplace: z.enum(['gold', 'property', 'vehicles']).optional(),
+      marketplace: z.enum(['gold']).optional(),
     }),
   }),
   asyncHandler(async (req, res) => {
     const countryId = req.context.countryId;
     if (!countryId) throw badRequest('Country is required');
-    const { marketplace } = query<{ marketplace?: 'gold' | 'property' | 'vehicles' }>(req);
+    const { marketplace } = query<{ marketplace?: 'gold' }>(req);
     return cached(req, res, 300, await getRegulations(countryId, marketplace));
   }),
 );

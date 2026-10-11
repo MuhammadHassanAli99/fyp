@@ -108,9 +108,6 @@ class _BusinessEditScreenState extends State<BusinessEditScreen> {
 
   static const kinds = [
     ('company', 'Company'),
-    ('dealer', 'Vehicle dealer'),
-    ('agency', 'Property agency'),
-    ('builder', 'Builder'),
     ('gold_shop', 'Gold shop'),
   ];
 

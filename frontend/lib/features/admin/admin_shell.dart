@@ -176,7 +176,7 @@ class _Dashboard extends StatelessWidget {
             Text('Marketplace control plane', style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 6),
             Text(
-              'Gold, Property and Vehicles share this plane. Access is permission- and scope-based.',
+              'Gold marketplace operations live here. Access is permission- and scope-based.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.goldMuted),
             ),
             const SizedBox(height: 20),

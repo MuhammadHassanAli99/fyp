@@ -1,5 +1,7 @@
 -- =============================================================================
--- 06  Demo seller + published sample listings (gold / property / vehicles)
+-- 06  Demo seller + published sample listings (Gold only — the API is
+--     Gold-only; Property/Vehicles demo listings were removed along with
+--     those marketplace modules).
 --     Gives the Flutter feeds something real to show after `npm run db:seed`.
 --     Demo login: demo.seller@aurelia.test / Password123!
 -- =============================================================================
@@ -40,7 +42,7 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO user_profiles (user_id, display_name, first_name, last_name, bio, whatsapp, show_phone, show_email, profile_completeness)
 VALUES (
   9001, 'AURELIA Demo Seller', 'Demo', 'Seller',
-  'Seeded demo seller for Gold, Property and Vehicles feeds.',
+  'Seeded demo seller for the Gold feed.',
   '+923001234567', TRUE, TRUE, 80
 )
 ON DUPLICATE KEY UPDATE
@@ -52,7 +54,8 @@ VALUES (9001, 2, NULL, CURRENT_TIMESTAMP)
 ON DUPLICATE KEY UPDATE granted_at = VALUES(granted_at);
 
 -- -----------------------------------------------------------------------------
--- Published listings (ids 9101–9106)
+-- Published listings (ids 9101–9102). Property (9103/9104) and Vehicle
+-- (9105/9106) demo listings were removed with those marketplaces.
 -- -----------------------------------------------------------------------------
 INSERT INTO listings (
   id, uuid, reference_code, marketplace_id, category_id, user_id, operation,
@@ -74,35 +77,7 @@ INSERT INTO listings (
    'LBMA-style 24K bar, sealed packaging. Perfect for stacking.',
    'en', 'new', 312000.00, 'PKR', 'fixed', 'total', 312000.00, FALSE,
    1, 'published', CURRENT_TIMESTAMP, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 90 DAY),
-   FALSE, TRUE, 0, 85, 1.1, '+923001234567', '+923001234567', TRUE, TRUE, TRUE, 'import'),
-
-  (9103, 'b1111111-1111-4111-8111-111111111103', 'PRP-DEMO01', 2, 211, 9001, 'sell',
-   '3 Bed Apartment in DHA Phase 5', '3-bed-apartment-dha-phase-5',
-   'Bright corner apartment with open kitchen, covered parking and society gym access.',
-   'en', 'excellent', 28500000.00, 'PKR', 'negotiable', 'total', 28500000.00, TRUE,
-   1, 'published', CURRENT_TIMESTAMP, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 120 DAY),
-   TRUE, TRUE, 0, 88, 1.15, '+923001234567', '+923001234567', TRUE, TRUE, TRUE, 'import'),
-
-  (9104, 'b1111111-1111-4111-8111-111111111104', 'PRP-DEMO02', 2, 210, 9001, 'rent',
-   'Furnished House for Rent — Bahria Town', 'furnished-house-rent-bahria',
-   'Fully furnished 4-bed house with lawn, backup power and 24/7 security.',
-   'en', 'good', 180000.00, 'PKR', 'fixed', 'per_month', 180000.00, FALSE,
-   1, 'published', CURRENT_TIMESTAMP, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 60 DAY),
-   FALSE, TRUE, 0, 82, 1.05, '+923001234567', '+923001234567', TRUE, TRUE, TRUE, 'import'),
-
-  (9105, 'b1111111-1111-4111-8111-111111111105', 'VEH-DEMO01', 3, 310, 9001, 'sell',
-   'Toyota Corolla Altis 2021', 'toyota-corolla-altis-2021',
-   'Single owner, full service history, accident-free. Inspected and finance available.',
-   'en', 'excellent', 5850000.00, 'PKR', 'negotiable', 'total', 5850000.00, TRUE,
-   1, 'published', CURRENT_TIMESTAMP, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 90 DAY),
-   TRUE, TRUE, 0, 92, 1.25, '+923001234567', '+923001234567', TRUE, TRUE, TRUE, 'import'),
-
-  (9106, 'b1111111-1111-4111-8111-111111111106', 'VEH-DEMO02', 3, 310, 9001, 'sell',
-   'Honda Civic Oriel 2019', 'honda-civic-oriel-2019',
-   'Pearl white Civic Oriel with sunroof. Well maintained city-driven car.',
-   'en', 'good', 4950000.00, 'PKR', 'fixed', 'total', 4950000.00, FALSE,
-   1, 'published', CURRENT_TIMESTAMP, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 90 DAY),
-   FALSE, FALSE, 0, 80, 1.0, '+923001234567', '+923001234567', TRUE, TRUE, TRUE, 'import')
+   FALSE, TRUE, 0, 85, 1.1, '+923001234567', '+923001234567', TRUE, TRUE, TRUE, 'import')
 ON DUPLICATE KEY UPDATE
   title = VALUES(title),
   description = VALUES(description),
@@ -142,68 +117,7 @@ ON DUPLICATE KEY UPDATE
   form = VALUES(form),
   is_hallmarked = VALUES(is_hallmarked);
 
--- -----------------------------------------------------------------------------
--- Property details
--- -----------------------------------------------------------------------------
-INSERT INTO property_listing_details (
-  listing_id, property_kind, usage_type,
-  bedrooms, bathrooms, kitchens, total_rooms,
-  floors, floor_number, total_floors,
-  area_value, area_unit, area_sqm, price_per_sqm,
-  parking_spaces, has_garage, has_garden, has_swimming_pool, has_gym,
-  has_elevator, has_security, has_backup_power, is_gated_community,
-  furnishing, construction_status, society_name, year_built
-) VALUES
-  (9103, 'apartment', 'residential',
-   3, 3, 1, 6,
-   1, 4, 12,
-   1800.000, 'sqft', 167.225, 170429.0000,
-   1, FALSE, FALSE, TRUE, TRUE,
-   TRUE, TRUE, TRUE, TRUE,
-   'semi_furnished', 'ready', 'DHA Phase 5', 2019),
-  (9104, 'house', 'rental',
-   4, 4, 1, 8,
-   2, NULL, 2,
-   10.000, 'marla', 252.928, 711.6600,
-   2, TRUE, TRUE, FALSE, FALSE,
-   FALSE, TRUE, TRUE, TRUE,
-   'fully_furnished', 'ready', 'Bahria Town', 2016)
-ON DUPLICATE KEY UPDATE
-  bedrooms = VALUES(bedrooms),
-  bathrooms = VALUES(bathrooms),
-  area_sqm = VALUES(area_sqm),
-  furnishing = VALUES(furnishing),
-  society_name = VALUES(society_name);
-
--- -----------------------------------------------------------------------------
--- Vehicle details (Toyota Corolla model 101, Honda Civic model 201)
--- -----------------------------------------------------------------------------
-INSERT INTO vehicle_listing_details (
-  listing_id, vehicle_type,
-  make_id, model_id, make_name, model_name, variant_name, year,
-  mileage, mileage_unit, mileage_km,
-  engine_cc, fuel_type, transmission, drivetrain,
-  body_type, color_exterior, color_family, doors, seats,
-  assembly, condition_grade, owners_count, accident_history, service_history,
-  is_inspected, inspection_score, finance_available, exchange_accepted
-) VALUES
-  (9105, 'car',
-   1, 101, 'Toyota', 'Corolla', 'Altis 1.6', 2021,
-   42000, 'km', 42000,
-   1600, 'petrol', 'automatic', 'fwd',
-   'sedan', 'Silver', 'silver', 4, 5,
-   'local', 'excellent', 1, 'none', 'full',
-   TRUE, 88.00, TRUE, TRUE),
-  (9106, 'car',
-   2, 201, 'Honda', 'Civic', 'Oriel 1.8', 2019,
-   68000, 'km', 68000,
-   1800, 'petrol', 'automatic', 'fwd',
-   'sedan', 'Pearl White', 'white', 4, 5,
-   'local', 'very_good', 2, 'none', 'partial',
-   FALSE, NULL, TRUE, FALSE)
-ON DUPLICATE KEY UPDATE
-  year = VALUES(year),
-  mileage_km = VALUES(mileage_km),
-  fuel_type = VALUES(fuel_type),
-  transmission = VALUES(transmission),
-  is_inspected = VALUES(is_inspected);
+-- Property and Vehicle demo listing detail rows (previously listing ids
+-- 9103/9104 and 9105/9106) were removed along with the Property and Vehicles
+-- marketplace modules. 09_property_marketplace.sql / 10_vehicle_marketplace.sql
+-- are left as no-ops since their target marketplaces are now inactive.

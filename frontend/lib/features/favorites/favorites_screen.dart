@@ -130,8 +130,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         onTap: () => _store.setMarketplace(null),
                       ),
                       _Chip(label: l10n.goldMarketplace, selected: _store.marketplaceFilter.value == 'gold', onTap: () => _store.setMarketplace('gold')),
-                      _Chip(label: l10n.propertyMarketplace, selected: _store.marketplaceFilter.value == 'property', onTap: () => _store.setMarketplace('property')),
-                      _Chip(label: l10n.vehiclesMarketplace, selected: _store.marketplaceFilter.value == 'vehicles', onTap: () => _store.setMarketplace('vehicles')),
                     ],
                   ),
                 ),

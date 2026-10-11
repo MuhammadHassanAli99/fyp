@@ -74,10 +74,7 @@ export function filterStateToSearchDsl(
   if (state.bathrooms?.min !== undefined) filters.bathroomsMin = state.bathrooms.min;
   if (state.bathrooms?.max !== undefined) filters.bathroomsMax = state.bathrooms.max;
 
-  const marketplace =
-    state.marketplace === 'parts' ? 'vehicles' : state.marketplace === 'gold' || state.marketplace === 'property' || state.marketplace === 'vehicles'
-      ? state.marketplace
-      : null;
+  const marketplace = state.marketplace === 'gold' ? state.marketplace : null;
 
   return validateSearchQuery(
     {
@@ -86,7 +83,7 @@ export function filterStateToSearchDsl(
       category: state.category,
       operation: state.operation as SearchQuery['operation'],
       availability: state.availability,
-      intent: state.marketplace === 'parts' ? 'parts' : 'search',
+      intent: 'search',
       filters,
       price: state.price
         ? {
@@ -124,7 +121,6 @@ export function searchDslToFilterState(dsl: SearchQuery): FilterState {
   };
   if (dsl.price) raw.price = dsl.price;
   if (dsl.location) raw.location = dsl.location;
-  if (dsl.intent === 'parts') raw.marketplace = 'parts';
   return validateFilterState(raw, { marketplace: dsl.marketplace, currency: dsl.price?.currency }).state;
 }
 

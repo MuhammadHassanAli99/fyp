@@ -158,12 +158,10 @@ class _FilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final allowed = store.filtersOrNull?.marketplaces ?? const ['gold', 'property', 'vehicles'];
+    final allowed = store.filtersOrNull?.marketplaces ?? const ['gold'];
     final markets = <(String?, String)>[
       (null, 'All markets'),
       if (allowed.contains('gold')) ('gold', 'Gold'),
-      if (allowed.contains('property')) ('property', 'Property'),
-      if (allowed.contains('vehicles')) ('vehicles', 'Vehicles'),
     ];
     return Padding(
       padding: EdgeInsets.fromLTRB(compact ? 12 : 16, 8, compact ? 12 : 16, 4),

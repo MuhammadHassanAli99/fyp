@@ -146,160 +146,12 @@ const GOLD: FilterDefinition[] = [
   def('scrap', 'Scrap gold', 'boolean', { marketplace: 'gold', sortOrder: 182 }),
 ];
 
-const PROPERTY: FilterDefinition[] = [
-  def('usageType', 'Property type', 'single_select', {
-    marketplace: 'property',
-    allowedValues: [opt('residential'), opt('commercial'), opt('land'), opt('hospitality')],
-    sortOrder: 110,
-  }),
-  def('propertyKind', 'Subtype', 'searchable_select', {
-    marketplace: 'property',
-    dataSource: 'property.types',
-    dependsOn: 'usageType',
-    sortOrder: 120,
-  }),
-  def('bedroomsMin', 'Bedrooms', 'number', { marketplace: 'property', min: 0, max: 20, step: 1, sortOrder: 130 }),
-  def('bathroomsMin', 'Bathrooms', 'number', { marketplace: 'property', min: 0, max: 20, step: 1, sortOrder: 140 }),
-  def('areaMin', 'Area', 'range', { marketplace: 'property', min: 0, max: 100000, step: 1, unit: 'sqm', sortOrder: 150 }),
-  def('areaUnit', 'Area unit', 'enum', {
-    marketplace: 'property',
-    allowedValues: [opt('sqm', 'Sq. m'), opt('sqft', 'Sq. ft'), opt('marla', 'Marla'), opt('kanal', 'Kanal')],
-    sortOrder: 151,
-  }),
-  def('floorsMin', 'Floors', 'range', { marketplace: 'property', min: 0, max: 200, step: 1, sortOrder: 160 }),
-  def('parkingMin', 'Parking', 'number', { marketplace: 'property', min: 0, max: 20, step: 1, sortOrder: 170 }),
-  def('furnishing', 'Furnished', 'single_select', {
-    marketplace: 'property',
-    allowedValues: [opt('unfurnished'), opt('semi_furnished', 'Semi furnished'), opt('furnished'), opt('fully_furnished', 'Fully furnished')],
-    sortOrder: 180,
-  }),
-  def('garden', 'Garden', 'boolean', { marketplace: 'property', sortOrder: 190 }),
-  def('balcony', 'Balcony', 'boolean', { marketplace: 'property', sortOrder: 191 }),
-  def('swimmingPool', 'Swimming pool', 'boolean', { marketplace: 'property', sortOrder: 192 }),
-  def('gym', 'Gym', 'boolean', { marketplace: 'property', sortOrder: 193 }),
-  def('elevator', 'Elevator', 'boolean', { marketplace: 'property', sortOrder: 194 }),
-  def('gatedCommunity', 'Gated community', 'boolean', { marketplace: 'property', sortOrder: 195 }),
-];
+// Property, Vehicles and Parts filter definitions were removed when those
+// marketplaces were deactivated (API is Gold-only). Parts depended entirely
+// on vehicle data sources (makes/models/part categories), so it was removed
+// alongside Vehicles rather than kept as a standalone marketplace.
 
-const VEHICLES: FilterDefinition[] = [
-  def('vehicleType', 'Vehicle type', 'single_select', {
-    marketplace: 'vehicles',
-    dataSource: 'vehicles.types',
-    allowedValues: [
-      opt('car'), opt('motorcycle'), opt('van'), opt('truck'), opt('bus'),
-      opt('taxi'), opt('rickshaw'), opt('boat'), opt('yacht'), opt('jet_ski'),
-    ],
-    sortOrder: 110,
-  }),
-  def('makeId', 'Make', 'searchable_select', {
-    marketplace: 'vehicles',
-    dataSource: 'vehicles.makes',
-    sortOrder: 120,
-  }),
-  def('modelId', 'Model', 'searchable_select', {
-    marketplace: 'vehicles',
-    dataSource: 'vehicles.models',
-    dependsOn: 'makeId',
-    sortOrder: 130,
-  }),
-  def('variantId', 'Variant', 'searchable_select', {
-    marketplace: 'vehicles',
-    dataSource: 'vehicles.variants',
-    dependsOn: 'modelId',
-    sortOrder: 140,
-  }),
-  def('yearMin', 'Year', 'year_range', {
-    marketplace: 'vehicles',
-    min: 1950,
-    max: new Date().getFullYear() + 1,
-    step: 1,
-    sortOrder: 150,
-  }),
-  def('mileageMax', 'Mileage', 'range', { marketplace: 'vehicles', min: 0, max: 1_000_000, step: 1000, unit: 'km', sortOrder: 160 }),
-  def('engineMin', 'Engine (cc)', 'range', { marketplace: 'vehicles', min: 0, max: 10000, step: 50, unit: 'cc', sortOrder: 170 }),
-  def('fuelType', 'Fuel', 'multi_select', {
-    marketplace: 'vehicles',
-    allowedValues: [opt('petrol'), opt('diesel'), opt('hybrid'), opt('electric'), opt('cng'), opt('lpg')],
-    sortOrder: 180,
-  }),
-  def('transmission', 'Transmission', 'multi_select', {
-    marketplace: 'vehicles',
-    allowedValues: [opt('automatic'), opt('manual'), opt('cvt', 'CVT'), opt('amt', 'AMT')],
-    sortOrder: 190,
-  }),
-  def('colorFamily', 'Color', 'single_select', {
-    marketplace: 'vehicles',
-    allowedValues: [
-      opt('white'), opt('black'), opt('silver'), opt('grey'), opt('red'),
-      opt('blue'), opt('green'), opt('other'),
-    ],
-    sortOrder: 200,
-  }),
-  def('bodyType', 'Body type', 'single_select', {
-    marketplace: 'vehicles',
-    allowedValues: [opt('sedan'), opt('hatchback'), opt('suv', 'SUV'), opt('coupe'), opt('pickup'), opt('van'), opt('convertible')],
-    sortOrder: 210,
-  }),
-  def('conditionGrade', 'Condition', 'enum', {
-    marketplace: 'vehicles',
-    allowedValues: [opt('excellent'), opt('good'), opt('fair'), opt('poor')],
-    sortOrder: 220,
-  }),
-  def('registrationStatus', 'Registration', 'single_select', {
-    marketplace: 'vehicles',
-    allowedValues: [opt('registered'), opt('unregistered'), opt('expired')],
-    sortOrder: 230,
-  }),
-  def('assembly', 'Import status', 'single_select', {
-    marketplace: 'vehicles',
-    allowedValues: [opt('local'), opt('imported'), opt('reconditioned')],
-    sortOrder: 240,
-  }),
-  def('inspected', 'Inspected', 'boolean', { marketplace: 'vehicles', sortOrder: 250 }),
-  def('financeAvailable', 'Finance available', 'boolean', { marketplace: 'vehicles', sortOrder: 251 }),
-];
-
-const PARTS: FilterDefinition[] = [
-  def('partCategory', 'Part category', 'searchable_select', {
-    marketplace: 'parts',
-    dataSource: 'vehicles.partCategories',
-    sortOrder: 110,
-  }),
-  def('partBrand', 'Part brand', 'searchable_select', {
-    marketplace: 'parts',
-    dataSource: 'vehicles.partBrands',
-    sortOrder: 120,
-  }),
-  def('oem', 'OEM / aftermarket', 'single_select', {
-    marketplace: 'parts',
-    allowedValues: [opt('oem', 'OEM'), opt('aftermarket', 'Aftermarket')],
-    sortOrder: 130,
-  }),
-  def('makeId', 'Compatible make', 'searchable_select', {
-    marketplace: 'parts',
-    dataSource: 'vehicles.makes',
-    sortOrder: 140,
-  }),
-  def('modelId', 'Compatible model', 'searchable_select', {
-    marketplace: 'parts',
-    dataSource: 'vehicles.models',
-    dependsOn: 'makeId',
-    sortOrder: 150,
-  }),
-  def('yearMin', 'Compatible year', 'year_range', {
-    marketplace: 'parts',
-    min: 1950,
-    max: new Date().getFullYear() + 1,
-    sortOrder: 160,
-  }),
-  def('condition', 'Condition', 'enum', {
-    marketplace: 'parts',
-    allowedValues: [opt('new'), opt('used'), opt('refurbished')],
-    sortOrder: 170,
-  }),
-];
-
-const ALL: FilterDefinition[] = [...COMMON, ...GOLD, ...PROPERTY, ...VEHICLES, ...PARTS];
+const ALL: FilterDefinition[] = [...COMMON, ...GOLD];
 
 export function builtInFilterDefinitions(): FilterDefinition[] {
   return ALL.map((item) => ({ ...item, allowedValues: [...item.allowedValues] }));
@@ -315,9 +167,7 @@ export function definitionsFor(params: {
   const subcategory = params.subcategory ?? null;
   return builtInFilterDefinitions()
     .filter((item) => {
-      if (item.marketplace === null) return marketplace !== 'parts';
-      if (marketplace === 'parts') return item.marketplace === 'parts';
-      if (item.marketplace === 'parts') return false;
+      if (item.marketplace === null) return true;
       if (item.marketplace !== marketplace) return false;
       if (item.category && category && item.category !== category) return false;
       if (item.subcategory && subcategory && item.subcategory !== subcategory) return false;
@@ -332,5 +182,5 @@ export function definitionByKey(key: string, marketplace?: string | null): Filte
 }
 
 export function isKnownFilterMarketplace(value: string | null | undefined): value is FilterMarketplace {
-  return value === 'gold' || value === 'property' || value === 'vehicles' || value === 'parts';
+  return value === 'gold';
 }

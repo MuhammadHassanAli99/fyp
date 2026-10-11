@@ -284,9 +284,7 @@ export function validateFilterState(
   const errors: string[] = [];
   const marketplace = typeof raw.marketplace === 'string' ? raw.marketplace : context.marketplace ?? null;
   const state = emptyFilterState({
-    marketplace: marketplace === 'gold' || marketplace === 'property' || marketplace === 'vehicles' || marketplace === 'parts'
-      ? marketplace
-      : null,
+    marketplace: marketplace === 'gold' ? marketplace : null,
     currency: context.currency ?? null,
   });
 

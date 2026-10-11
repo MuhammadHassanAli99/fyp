@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/auth/auth_status.dart';
 import '../core/di/service_locator.dart';
+import '../core/storage/prefs_storage.dart';
 import '../features/auth/biometric_lock_screen.dart';
 import '../features/auth/devices_screen.dart';
 import '../features/trust_risk/presentation/security_status_screen.dart';
@@ -27,9 +30,6 @@ import '../features/notifications/notification_center_screen.dart';
 import '../features/notifications/notification_settings_screen.dart';
 import '../features/onboarding_locale/locale_onboarding_screen.dart';
 import '../features/post/post_listing_screen.dart';
-import '../features/property/property_saved_searches_screen.dart';
-import '../features/vehicles/vehicle_parts_screen.dart';
-import '../features/vehicles/vehicle_saved_searches_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/profile/edit_profile_screen.dart';
 import '../features/profile/public_profile_screen.dart';
@@ -114,6 +114,22 @@ GoRouter createRouter({required GoRouterRefresh refresh}) {
           !isOpenProfile &&
           !isLegal) {
         return AppRoutes.login;
+      }
+
+      // Gold-only: clear legacy property/vehicles selections and auto-select
+      // the sole marketplace so users never land on a removed marketplace.
+      if (hasSession) {
+        final code = prefs.marketplaceCode;
+        if (code == 'property' || code == 'vehicles') {
+          unawaited(prefs.setString(PrefsKeys.marketplaceCode, 'gold'));
+        } else if (code == null) {
+          final sole = sl.catalogRepository.cachedMarketplaces;
+          if (sole != null && sole.length == 1) {
+            unawaited(prefs.setString(PrefsKeys.marketplaceCode, sole.first.code));
+          } else {
+            unawaited(prefs.setString(PrefsKeys.marketplaceCode, 'gold'));
+          }
+        }
       }
 
       if (hasSession &&
@@ -456,32 +472,6 @@ GoRouter createRouter({required GoRouterRefresh refresh}) {
       GoRoute(
         path: AppRoutes.post,
         builder: (_, _) => const PostListingScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.propertyMap,
-        builder: (_, _) => DeferredPage(
-          loader: maps_ui.loadLibrary,
-          builder: () => maps_ui.DiscoveryMapScreen(marketplace: 'property'),
-        ),
-      ),
-      GoRoute(
-        path: AppRoutes.propertySavedSearches,
-        builder: (_, _) => const PropertySavedSearchesScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.vehicleMap,
-        builder: (_, _) => DeferredPage(
-          loader: maps_ui.loadLibrary,
-          builder: () => maps_ui.DiscoveryMapScreen(marketplace: 'vehicles'),
-        ),
-      ),
-      GoRoute(
-        path: AppRoutes.vehicleSavedSearches,
-        builder: (_, _) => const VehicleSavedSearchesScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.vehicleParts,
-        builder: (_, _) => const VehiclePartsScreen(),
       ),
     ],
   );

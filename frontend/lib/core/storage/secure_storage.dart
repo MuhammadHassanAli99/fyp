@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../platform/platform_info.dart';
@@ -11,6 +12,10 @@ abstract final class SecureStorageKeys {
 /// Native: Android Keystore, iOS/macOS Keychain, Windows Credential Manager,
 /// Linux libsecret. Tokens never go to SharedPreferences or Drift.
 /// Web: in-memory only so tokens are not persisted in localStorage.
+///
+/// On unsigned/ad-hoc macOS debug builds, Keychain may reject access
+/// (PlatformException -34018). In that case we keep tokens in memory for the
+/// process lifetime so guest/login still work locally.
 class SecureStorage {
   SecureStorage({FlutterSecureStorage? storage})
       : _storage = storage ??
@@ -21,6 +26,7 @@ class SecureStorage {
               ),
               mOptions: MacOsOptions(
                 accessibility: KeychainAccessibility.first_unlock_this_device,
+                useDataProtectionKeyChain: false,
               ),
               wOptions: WindowsOptions(),
               lOptions: LinuxOptions(),
@@ -32,25 +38,42 @@ class SecureStorage {
   Future<String?> read(String key) async {
     if (_memory.containsKey(key)) return _memory[key];
     if (PlatformInfo.usesBrowserSession) return null;
-    return _storage.read(key: key);
+    try {
+      return await _storage.read(key: key);
+    } on PlatformException catch (e) {
+      _logKeychainFallback('read', e);
+      return null;
+    }
   }
 
   Future<void> write(String key, String value) async {
     _memory[key] = value;
     if (PlatformInfo.usesBrowserSession) return;
-    await _storage.write(key: key, value: value);
+    try {
+      await _storage.write(key: key, value: value);
+    } on PlatformException catch (e) {
+      _logKeychainFallback('write', e);
+    }
   }
 
   Future<void> delete(String key) async {
     _memory.remove(key);
     if (PlatformInfo.usesBrowserSession) return;
-    await _storage.delete(key: key);
+    try {
+      await _storage.delete(key: key);
+    } on PlatformException catch (e) {
+      _logKeychainFallback('delete', e);
+    }
   }
 
   Future<void> deleteAll() async {
     _memory.clear();
     if (PlatformInfo.usesBrowserSession) return;
-    await _storage.deleteAll();
+    try {
+      await _storage.deleteAll();
+    } on PlatformException catch (e) {
+      _logKeychainFallback('deleteAll', e);
+    }
   }
 
   Future<String?> get accessToken => read(SecureStorageKeys.accessToken);
@@ -67,6 +90,13 @@ class SecureStorage {
   Future<void> clearTokens() async {
     await delete(SecureStorageKeys.accessToken);
     await delete(SecureStorageKeys.refreshToken);
+  }
+
+  void _logKeychainFallback(String op, PlatformException e) {
+    debugPrint(
+      'SecureStorage.$op falling back to memory '
+      '(${e.code}: ${e.message})',
+    );
   }
 }
 

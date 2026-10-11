@@ -5,7 +5,7 @@
 
 import { z } from 'zod';
 
-export const MARKETPLACE_CODES = ['gold', 'property', 'vehicles'] as const;
+export const MARKETPLACE_CODES = ['gold'] as const;
 export type MarketplaceCode = (typeof MARKETPLACE_CODES)[number];
 
 export const SEARCH_INTENTS = [

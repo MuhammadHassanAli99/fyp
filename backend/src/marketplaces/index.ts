@@ -5,12 +5,10 @@ import { queryRows, type Row } from '../db/query';
 import { loggerFor } from '../config/logger';
 import { marketplaceRegistry } from './module';
 import { goldModule } from './gold/gold.module';
-import { propertyModule } from './property/property.module';
-import { vehiclesModule } from './vehicles/vehicles.module';
 
 const log = loggerFor('marketplaces');
 
-const MODULES = [goldModule, propertyModule, vehiclesModule];
+const MODULES = [goldModule];
 
 /**
  * Explicit registration rather than import side effects: the boot sequence can
@@ -60,5 +58,3 @@ export async function bindMarketplaceIds(): Promise<void> {
 
 export { marketplaceRegistry } from './module';
 export { goldModule } from './gold/gold.module';
-export { propertyModule } from './property/property.module';
-export { vehiclesModule } from './vehicles/vehicles.module';

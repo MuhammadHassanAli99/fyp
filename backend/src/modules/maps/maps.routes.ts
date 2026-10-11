@@ -47,7 +47,7 @@ mapsRouter.post(
   searchRateLimit,
   validate({
     body: z.object({
-      marketplace: z.enum(['gold', 'property', 'vehicles']).nullable().optional(),
+      marketplace: z.enum(['gold']).nullable().optional(),
       dsl: z.record(z.string(), z.unknown()).optional(),
       filters: z.record(z.string(), z.unknown()).optional(),
       bounds: boundsSchema.optional(),
@@ -89,7 +89,7 @@ mapsRouter.get(
   searchRateLimit,
   validate({
     query: boundsSchema.extend({
-      marketplace: z.enum(['gold', 'property', 'vehicles']).optional(),
+      marketplace: z.enum(['gold']).optional(),
       zoom: z.coerce.number().min(1).max(18).optional(),
       radiusKm: z.coerce.number().min(0.1).max(100).optional(),
     }),

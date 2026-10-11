@@ -53,7 +53,7 @@ export const createBusinessSchema = z.object({
   establishedYear: z.coerce.number().int().min(1800).max(2100).optional(),
   businessHours: hoursSchema,
   socialLinks: z.record(z.string(), z.string().url().max(255)).optional(),
-  marketplaces: z.array(z.enum(['gold', 'property', 'vehicles'])).optional(),
+  marketplaces: z.array(z.enum(['gold'])).optional(),
 });
 
 export const updateBusinessSchema = createBusinessSchema.partial().omit({ kind: true });

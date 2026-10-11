@@ -64,8 +64,6 @@ class _SellerListingsPanelState extends State<SellerListingsPanel> {
 
   String _marketplaceLabel(String code) => switch (code) {
         'gold' => 'Gold',
-        'property' => 'Property',
-        'vehicles' => 'Vehicles',
         _ => code,
       };
 
@@ -96,8 +94,6 @@ class _SellerListingsPanelState extends State<SellerListingsPanel> {
                   for (final op in [
                     (null, 'All markets'),
                     ('gold', 'Gold'),
-                    ('property', 'Property'),
-                    ('vehicles', 'Vehicles'),
                   ])
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
@@ -166,7 +162,7 @@ class _SellerListingsPanelState extends State<SellerListingsPanel> {
                     title: hasFilters ? 'No matching ads' : 'No ads yet',
                     subtitle: hasFilters
                         ? 'Try another marketplace or status filter.'
-                        : 'Tap Sell (+) to post your first gold, property or vehicle ad.',
+                        : 'Tap Sell (+) to post your first gold ad.',
                     action: hasFilters
                         ? TextButton(
                             onPressed: () {

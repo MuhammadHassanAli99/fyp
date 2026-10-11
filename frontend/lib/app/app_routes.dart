@@ -39,11 +39,6 @@ abstract final class AppRoutes {
   static const publicProfile = '/u/:username';
   static const draft = '/draft';
   static const post = '/post';
-  static const propertyMap = '/property/map';
-  static const propertySavedSearches = '/property/saved-searches';
-  static const vehicleMap = '/vehicles/map';
-  static const vehicleSavedSearches = '/vehicles/saved-searches';
-  static const vehicleParts = '/vehicles/parts';
   static const search = '/search';
   static const searchSaved = '/search/saved';
   static const searchNearby = '/search/nearby';

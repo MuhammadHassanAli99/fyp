@@ -52,8 +52,6 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     return switch (code) {
       'unread' => l10n.notificationsUnread,
       'gold' => l10n.goldMarketplace,
-      'property' => l10n.propertyMarketplace,
-      'vehicles' => l10n.vehiclesMarketplace,
       'messages' => l10n.notificationsMessages,
       'security' => l10n.notificationsSecurity,
       'payments' => l10n.notificationsPayments,
